@@ -1,5 +1,5 @@
 # MeltdownSpectreReport
-Query mitigation status of Meltdown and Spectre against one or multiple computers. It uses parallelization for fast data collection.
+Query mitigation status of Meltdown and Spectre against one or multiple Windows computers. It uses parallelization for fast data collection.
 
 # Example
 ## Execution against local computer
