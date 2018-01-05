@@ -69,7 +69,7 @@ Is `true` if `vmms` Service is running. Hypervisors are at increased risk.
 ## isTerminalServer
 Is `true` if `TerminalServerMode` is `1`. Terminal Servers (Remote Desktop Servers) are at increased risk.
 ## BTI
-BTI is *Branch Target Injection* as described in [https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5715](CVE-2017-5715) alias [Spectre](https://spectreattack.com/).
+BTI is *Branch Target Injection* as described in [CVE-2017-5715](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5715) alias [Spectre](https://spectreattack.com/).
 
 `BTIHardwarePresent` is `true` if the Hardware supports a mitigation. Check for BIOS/firmware updates provided by your device OEM.
 
