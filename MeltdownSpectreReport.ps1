@@ -881,6 +881,7 @@ $GetMeltdownStatusInformation = {
         Expression = {$env:COMPUTERNAME}
     } | 
         Sort-Object HotFixId
+    $ExecutionDate = Get-Date -Format d
 
     $vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
     if ($vmms.Status -eq 'Running') {
@@ -995,7 +996,6 @@ $GetMeltdownStatusInformation = {
     }
 }
 
-$ExecutionDate = Get-Date -Format g
 if ($ComputerName) {
     $SessionOption = New-PSSessionOption -NoMachineProfile
     $CimSession = New-PSSession -ComputerName $ComputerName -SessionOption $SessionOption
