@@ -1,6 +1,8 @@
 # MeltdownSpectreReport
 Query mitigation status of Meltdown and Spectre against one or multiple Windows computers. It uses parallelization for fast data collection.
 
+The script includes [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.1/Content/SpeculationControl.psm1) from Microsoft and [Invoke-Parallel](https://github.com/RamblingCookieMonster/Invoke-Parallel) from [RamblingCookieMonster](https://github.com/RamblingCookieMonster). All credits for these functions go to them. Thank you!
+
 # Example
 ## Execution against local computer
 
