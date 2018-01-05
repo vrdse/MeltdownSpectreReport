@@ -892,7 +892,7 @@ $GetMeltdownStatusInformation = {
     }
 
 
-    $TerminalServerMode = (Get-CimInstance -Namespace root\CIMV2/TerminalServices -ClassName Win32_TerminalServiceSetting).TerminalServerMode
+    $TerminalServerMode = (Get-WmiObject -Namespace root\CIMV2/TerminalServices -Class Win32_TerminalServiceSetting).TerminalServerMode
     if ($TerminalServerMode -eq 1) {
         $isTerminalServer = $true
     }
