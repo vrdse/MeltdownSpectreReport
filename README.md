@@ -92,6 +92,12 @@ As per [Windows Server guidance to protect against speculative execution side-ch
 
 `OSMitigationEnabled` is `true` if the values for the registry key `Memory Management` are set as required, i.e. `FeatureSettingsOverride` is `0` and `FeatureSettingsOverrideMask` is `3`.
 
+To create the required values, you can use the following PowerShell commands:
+```powershell
+New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -PropertyType 'DWORD' -Value '0'  -Name 'FeatureSettingsOverride'
+New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -PropertyType 'DWORD' -Value '3'  -Name 'FeatureSettingsOverrideMask'
+```
+
 ## AVCompatibility
 As per [Important information regarding the Windows security updates released on January 3, 2018 and anti-virus software](https://support.microsoft.com/help/4072699), the security updates are only installed, if the registry value `cadca5fe-87d3-4b96-b7fb-a231484277cc` is present in `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\QualityCompat`. 
 
