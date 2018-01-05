@@ -874,7 +874,8 @@ $GetMeltdownStatusInformation = {
     $Processor = (Get-WmiObject -Class Win32_Processor).Name
     $OperatingSystem = $Win32_OperatingSystem.Caption
     $OSReleaseId = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue).ReleaseId
-    $LastReboot = $Win32_OperatingSystem.LastBootUptime
+    $LastReboot = [Management.ManagementDateTimeConverter]::ToDateTime($Win32_OperatingSystem.LastBootUptime)
+    $Uptime = ((Get-Date) - $LastReboot) -f {0:g}
     $Hotfixes = Get-WmiObject -Class Win32_QuickFixEngineering | 
         Select-Object HotFixId, Description, InstalledOn, @{
         Name       = 'ComputerName'; 
@@ -966,34 +967,33 @@ $GetMeltdownStatusInformation = {
 
     #Internet Explorer
 
-
-    New-Object -TypeName PSCustomObject -Property @{
-        ComputerName                   = $env:COMPUTERNAME
-        Manufacturer                   = $ComputerManufacturer
-        Model                          = $ComputerModel
-        BIOS                           = $BIOS
-        CPU                            = $Processor
-        OperatingSystem                = $OperatingSystem
-        OSReleaseId                    = $OSReleaseId
-        isHyperV                       = $isHyperV
-        isTerminalServer               = $isTerminalServer
-        BTIHardwarePresent             = $SpeculationControlSettings.BTIHardwarePresent
-        BTIWindowsSupportPresent       = $SpeculationControlSettings.BTIWindowsSupportPresent
-        BTIWindowsSupportEnabled       = $SpeculationControlSettings.BTIWindowsSupportEnabled
-        BTIDisabledBySystemPolicy      = $SpeculationControlSettings.BTIDisabledBySystemPolicy
-        BTIDisabledByNoHardwareSupport = $SpeculationControlSettings.BTIDisabledByNoHardwareSupport
-        KVAShadowRequired              = $SpeculationControlSettings.KVAShadowRequired
-        KVAShadowWindowsSupportPresent = $SpeculationControlSettings.KVAShadowWindowsSupportPresent
-        KVAShadowWindowsSupportEnabled = $SpeculationControlSettings.KVAShadowWindowsSupportEnabled
-        KVAShadowPcidEnabled           = $SpeculationControlSettings.KVAShadowPcidEnabled
-        OSMitigationEnabled            = $OSMitigationEnabled
-        AVCompatibility                = $AVCompatiblity
-        ChromeVersion                  = $ChromeVersion
-        ChromeSitePerProcess           = $ChromeSitePerProcess
-        InstalledUpdates               = $Hotfixes
-        LastReboot                     = $LastReboot
-        ExecutionDate                  = $ExecutionDate   
-    }
+    $output = New-Object -TypeName PSCustomObject
+    $output | Add-Member -MemberType NoteProperty -Name ComputerName -Value $env:COMPUTERNAME
+    $output | Add-Member -MemberType NoteProperty -Name Manufacturer -Value $ComputerManufacturer
+    $output | Add-Member -MemberType NoteProperty -Name Model -Value $ComputerModel
+    $output | Add-Member -MemberType NoteProperty -Name BIOS -Value $BIOS
+    $output | Add-Member -MemberType NoteProperty -Name CPU -Value $Processor
+    $output | Add-Member -MemberType NoteProperty -Name OperatingSystem -Value $OperatingSystem
+    $output | Add-Member -MemberType NoteProperty -Name OSReleaseId -Value $OSReleaseId
+    $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $isHyperV
+    $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $isTerminalServer
+    $output | Add-Member -MemberType NoteProperty -Name BTIHardwarePresent -Value $SpeculationControlSettings.BTIHardwarePresent
+    $output | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportPresent -Value $SpeculationControlSettings.BTIWindowsSupportPresent
+    $output | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportEnabled -Value $SpeculationControlSettings.BTIWindowsSupportEnabled
+    $output | Add-Member -MemberType NoteProperty -Name BTIDisabledBySystemPolicy -Value $SpeculationControlSettings.BTIDisabledBySystemPolicy
+    $output | Add-Member -MemberType NoteProperty -Name BTIDisabledByNoHardwareSupport -Value $SpeculationControlSettings.BTIDisabledByNoHardwareSupport
+    $output | Add-Member -MemberType NoteProperty -Name KVAShadowRequired -Value $SpeculationControlSettings.KVAShadowRequired
+    $output | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportPresent -Value $SpeculationControlSettings.KVAShadowWindowsSupportPresent
+    $output | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportEnabled -Value $SpeculationControlSettings.KVAShadowWindowsSupportEnabled
+    $output | Add-Member -MemberType NoteProperty -Name KVAShadowPcidEnabled -Value $SpeculationControlSettings.KVAShadowPcidEnabled
+    $output | Add-Member -MemberType NoteProperty -Name OSMitigationEnabled -Value $OSMitigationEnabled
+    $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $AVCompatiblity
+    $output | Add-Member -MemberType NoteProperty -Name ChromeVersion -Value $ChromeVersion
+    $output | Add-Member -MemberType NoteProperty -Name ChromeSitePerProcess -Value $ChromeSitePerProcess
+    $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $Hotfixes
+    $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $Uptime
+    $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $ExecutionDate
+    $output
 }
 
 if ($ComputerName) {
