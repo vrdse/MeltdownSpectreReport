@@ -866,16 +866,16 @@ $GetMeltdownStatusInformation = {
         }
     }
 
-    $Win32_ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
-    $Win32_OperatingSystem = Get-CimInstance -ClassName Win32_OperatingSystem
+    $Win32_ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
+    $Win32_OperatingSystem = Get-WmiObject -Class Win32_OperatingSystem
     $ComputerManufacturer = $Win32_ComputerSystem.Manufacturer
     $ComputerModel = $Win32_ComputerSystem.Model
-    $BIOS = (Get-CimInstance -ClassName Win32_BIOS).Name
-    $Processor = (Get-CimInstance -ClassName Win32_Processor).Name
+    $BIOS = (Get-WmiObject -Class Win32_BIOS).Name
+    $Processor = (Get-WmiObject -Class Win32_Processor).Name
     $OperatingSystem = $Win32_OperatingSystem.Caption
     $OSReleaseId = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue).ReleaseId
     $LastReboot = $Win32_OperatingSystem.LastBootUptime
-    $Hotfixes = Get-CimInstance -ClassName Win32_QuickFixEngineering | 
+    $Hotfixes = Get-WmiObject -Class Win32_QuickFixEngineering | 
         Select-Object HotFixId, Description, InstalledOn, @{
         Name       = 'ComputerName'; 
         Expression = {$env:COMPUTERNAME}
@@ -967,7 +967,7 @@ $GetMeltdownStatusInformation = {
     #Internet Explorer
 
 
-    [PSCustomObject]@{
+    New-Object -TypeName PSCustomObject -Property @{
         ComputerName                   = $env:COMPUTERNAME
         Manufacturer                   = $ComputerManufacturer
         Model                          = $ComputerModel
