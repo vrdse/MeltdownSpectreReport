@@ -875,7 +875,7 @@ $GetMeltdownStatusInformation = {
     $OperatingSystem = $Win32_OperatingSystem.Caption
     $OSReleaseId = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue).ReleaseId
     $LastReboot = [Management.ManagementDateTimeConverter]::ToDateTime($Win32_OperatingSystem.LastBootUptime)
-    $Uptime = ((Get-Date) - $LastReboot) -f {0:g}
+    $Uptime = ((Get-Date) - $LastReboot).ToString()
     $Hotfixes = Get-WmiObject -Class Win32_QuickFixEngineering | 
         Select-Object HotFixId, Description, InstalledOn, @{
         Name       = 'ComputerName'; 
