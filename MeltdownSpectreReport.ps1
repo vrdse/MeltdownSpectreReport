@@ -2,7 +2,7 @@
 .SYNOPSIS
     Query mitigation status of Meltdown and Spectre against one or multiple computers
 .DESCRIPTION
-    This script uses Get-SpeculationControlSettings (Microsoft) to get the mitigation status for Windows, 
+    This script uses Test-SpeculationControlSettings (Microsoft/Chirishman) to get the mitigation status for Windows, 
     and extends the information with various registry keys, computer and software information to get a 
     broader picture. Also it uses Invoke-Parallel (RamblingCookieMonster) and Invoke-Command to obtain the 
     information from remote computers with speed.
@@ -619,271 +619,288 @@ function Invoke-Parallel {
 }
 
 $GetMeltdownStatusInformation = {
-
-    function Get-SpeculationControlSettings {
+    # Test-SpeculationControlSettings from 'Chirishman'
+    # https://www.powershellgallery.com/packages/PuppyFriendlySpeculationControl/1.5.2.1/Content/PuppyFriendlySpeculationControl.psm1
+    # Based on https://www.powershellgallery.com/packages/SpeculationControl/1.0.2
+    function Test-SpeculationControlSettings {
         <# 
  
-        .SYNOPSIS 
-        This function queries the speculation control settings for the system. 
-        
-        .DESCRIPTION 
-        This function queries the speculation control settings for the system. 
-        
-        Version 1.3. 
-            
-        From https://www.powershellgallery.com/packages/SpeculationControl/1.0.2
-        All credits go to Microsoft
-        
-        #>
+  .SYNOPSIS 
+  This function queries the speculation control settings for the system. 
+ 
+  .DESCRIPTION 
+  This function queries the speculation control settings for the system. 
+ 
+  Version 1.3. 
+   
+  #>
 
         [CmdletBinding()]
-        param (
+        Param (
 
         )
-  
-        process {
-
-            $NtQSIDefinition = @' 
-    [DllImport("ntdll.dll")] 
-    public static extern int NtQuerySystemInformation(uint systemInformationClass, IntPtr systemInformation, uint systemInformationLength, IntPtr returnLength); 
-'@
-    
-            $ntdll = Add-Type -MemberDefinition $NtQSIDefinition -Name 'ntdll' -Namespace 'Win32' -PassThru
-
+        Begin {
+            try {
+                $ntdll = [Win32.ntdll]
+            }
+            catch {
+                $NtQSIDefinition = "`n[DllImport(""ntdll.dll"")]`npublic static extern int NtQuerySystemInformation(uint systemInformationClass, IntPtr systemInformation, uint systemInformationLength, IntPtr returnLength);"
+                $ntdll = Add-Type -MemberDefinition $NtQSIDefinition -Name 'ntdll' -Namespace 'Win32' -PassThru
+            }
 
             [System.IntPtr]$systemInformationPtr = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(4)
             [System.IntPtr]$returnLengthPtr = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(4)
 
-            $object = New-Object -TypeName PSObject
-
+            $StatusObject = [Ordered]@{
+                btiHardwarePresent             = $false
+                btiWindowsSupportPresent       = $false
+                btiWindowsSupportEnabled       = $false
+                btiDisabledBySystemPolicy      = $false
+                btiDisabledByNoHardwareSupport = $false
+                kvaShadowRequired              = $true
+                kvaShadowPresent               = $false
+                kvaShadowEnabled               = $false
+                KvaShadowUserGlobal            = $false
+                kvaShadowPcidEnabled           = $false
+                KvaShadowInvpcid               = $false
+            }
+        
+        }
+        Process {
             try {
-    
-                #
+            
+                $TestParameters = @{
+                    StatusObject         = ([ref]$StatusObject)
+                    systemInformationPtr = ([ref]$systemInformationPtr)
+                    returnLengthPtr      = ([ref]$returnLengthPtr)
+                }
+
                 # Query branch target injection information.
-                #
+                Test-BTI @TestParameters
+            
+                Write-Verbose ''
 
-                #Write-Host "Speculation control settings for CVE-2017-5715 [branch target injection]" -ForegroundColor Cyan
-                #Write-Host
-
-                $btiHardwarePresent = $false
-                $btiWindowsSupportPresent = $false
-                $btiWindowsSupportEnabled = $false
-                $btiDisabledBySystemPolicy = $false
-                $btiDisabledByNoHardwareSupport = $false
-    
-                [System.UInt32]$systemInformationClass = 201
-                [System.UInt32]$systemInformationLength = 4
-
-                $retval = $ntdll::NtQuerySystemInformation($systemInformationClass, $systemInformationPtr, $systemInformationLength, $returnLengthPtr)
-
-                if ($retval -eq 0xc0000003 -or $retval -eq 0xc0000002) {
-                    # fallthrough
-                }
-                elseif ($retval -ne 0) {
-                    throw (("Querying branch target injection information failed with error {0:X8}" -f $retval))
-                }
-                else {
-    
-                    [System.UInt32]$scfBpbEnabled = 0x01
-                    [System.UInt32]$scfBpbDisabledSystemPolicy = 0x02
-                    [System.UInt32]$scfBpbDisabledNoHardwareSupport = 0x04
-                    [System.UInt32]$scfHwReg1Enumerated = 0x08
-                    [System.UInt32]$scfHwReg2Enumerated = 0x10
-                    [System.UInt32]$scfHwMode1Present = 0x20
-                    [System.UInt32]$scfHwMode2Present = 0x40
-                    [System.UInt32]$scfSmepPresent = 0x80
-
-                    [System.UInt32]$flags = [System.UInt32][System.Runtime.InteropServices.Marshal]::ReadInt32($systemInformationPtr)
-
-                    $btiHardwarePresent = ((($flags -band $scfHwReg1Enumerated) -ne 0) -or (($flags -band $scfHwReg2Enumerated)))
-                    $btiWindowsSupportPresent = $true
-                    $btiWindowsSupportEnabled = (($flags -band $scfBpbEnabled) -ne 0)
-
-                    if ($btiWindowsSupportEnabled -eq $false) {
-                        $btiDisabledBySystemPolicy = (($flags -band $scfBpbDisabledSystemPolicy) -ne 0)
-                        $btiDisabledByNoHardwareSupport = (($flags -band $scfBpbDisabledNoHardwareSupport) -ne 0)
-                    }
-
-                    if ($PSBoundParameters['Verbose']) {
-                        #Write-Host "BpbEnabled :" (($flags -band $scfBpbEnabled) -ne 0)
-                        #Write-Host "BpbDisabledSystemPolicy :" (($flags -band $scfBpbDisabledSystemPolicy) -ne 0)
-                        #Write-Host "BpbDisabledNoHardwareSupport :" (($flags -band $scfBpbDisabledNoHardwareSupport) -ne 0)
-                        #Write-Host "HwReg1Enumerated :" (($flags -band $scfHwReg1Enumerated) -ne 0)
-                        #Write-Host "HwReg2Enumerated :" (($flags -band $scfHwReg2Enumerated) -ne 0)
-                        #Write-Host "HwMode1Present :" (($flags -band $scfHwMode1Present) -ne 0)
-                        #Write-Host "HwMode2Present :" (($flags -band $scfHwMode2Present) -ne 0)
-                        #Write-Host "SmepPresent :" (($flags -band $scfSmepPresent) -ne 0)
-                    }
-                }
-
-                #Write-Host "Hardware support for branch target injection mitigation is present:"($btiHardwarePresent) -ForegroundColor $(If ($btiHardwarePresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-                #Write-Host "Windows OS support for branch target injection mitigation is present:"($btiWindowsSupportPresent) -ForegroundColor $(If ($btiWindowsSupportPresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-                #Write-Host "Windows OS support for branch target injection mitigation is enabled:"($btiWindowsSupportEnabled) -ForegroundColor $(If ($btiWindowsSupportEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-  
-                if ($btiWindowsSupportPresent -eq $true -and $btiWindowsSupportEnabled -eq $false) {
-                    #Write-Host -ForegroundColor Red "Windows OS support for branch target injection mitigation is disabled by system policy:"($btiDisabledBySystemPolicy)
-                    #Write-Host -ForegroundColor Red "Windows OS support for branch target injection mitigation is disabled by absence of hardware support:"($btiDisabledByNoHardwareSupport)
-                }
-        
-                $object | Add-Member -MemberType NoteProperty -Name BTIHardwarePresent -Value $btiHardwarePresent
-                $object | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportPresent -Value $btiWindowsSupportPresent
-                $object | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportEnabled -Value $btiWindowsSupportEnabled
-                $object | Add-Member -MemberType NoteProperty -Name BTIDisabledBySystemPolicy -Value $btiDisabledBySystemPolicy
-                $object | Add-Member -MemberType NoteProperty -Name BTIDisabledByNoHardwareSupport -Value $btiDisabledByNoHardwareSupport
-
-                #
                 # Query kernel VA shadow information.
-                #
-
-                #Write-Host
-                #Write-Host "Speculation control settings for CVE-2017-5754 [rogue data cache load]" -ForegroundColor Cyan
-                #Write-Host    
-
-                $kvaShadowRequired = $true
-                $kvaShadowPresent = $false
-                $kvaShadowEnabled = $false
-                $kvaShadowPcidEnabled = $false
-
-                $cpu = Get-WmiObject Win32_Processor
-
-                if ($cpu.Manufacturer -eq "AuthenticAMD") {
-                    $kvaShadowRequired = $false
-                }
-                elseif ($cpu.Manufacturer -eq "GenuineIntel") {
-                    $regex = [regex]'Family (\d+) Model (\d+) Stepping (\d+)'
-                    $result = $regex.Match($cpu.Description)
+                Test-KVA @TestParameters
             
-                    if ($result.Success) {
-                        $family = [System.UInt32]$result.Groups[1].Value
-                        $model = [System.UInt32]$result.Groups[2].Value
-                        $stepping = [System.UInt32]$result.Groups[3].Value
-                
-                        if (($family -eq 0x6) -and 
-                            (($model -eq 0x1c) -or
-                                ($model -eq 0x26) -or
-                                ($model -eq 0x27) -or
-                                ($model -eq 0x36) -or
-                                ($model -eq 0x35))) {
-
-                            $kvaShadowRequired = $false
-                        }
-                    }
-                }
-                else {
-                    throw ("Unsupported processor manufacturer: {0}" -f $cpu.Manufacturer)
-                }
-
-                [System.UInt32]$systemInformationClass = 196
-                [System.UInt32]$systemInformationLength = 4
-
-                $retval = $ntdll::NtQuerySystemInformation($systemInformationClass, $systemInformationPtr, $systemInformationLength, $returnLengthPtr)
-
-                if ($retval -eq 0xc0000003 -or $retval -eq 0xc0000002) {
-                }
-                elseif ($retval -ne 0) {
-                    throw (("Querying kernel VA shadow information failed with error {0:X8}" -f $retval))
-                }
-                else {
-    
-                    [System.UInt32]$kvaShadowEnabledFlag = 0x01
-                    [System.UInt32]$kvaShadowUserGlobalFlag = 0x02
-                    [System.UInt32]$kvaShadowPcidFlag = 0x04
-                    [System.UInt32]$kvaShadowInvpcidFlag = 0x08
-
-                    [System.UInt32]$flags = [System.UInt32][System.Runtime.InteropServices.Marshal]::ReadInt32($systemInformationPtr)
-
-                    $kvaShadowPresent = $true
-                    $kvaShadowEnabled = (($flags -band $kvaShadowEnabledFlag) -ne 0)
-                    $kvaShadowPcidEnabled = ((($flags -band $kvaShadowPcidFlag) -ne 0) -and (($flags -band $kvaShadowInvpcidFlag) -ne 0))
-
-                    if ($PSBoundParameters['Verbose']) {
-                        #Write-Host "KvaShadowEnabled :" (($flags -band $kvaShadowEnabledFlag) -ne 0)
-                        #Write-Host "KvaShadowUserGlobal :" (($flags -band $kvaShadowUserGlobalFlag) -ne 0)
-                        #Write-Host "KvaShadowPcid :" (($flags -band $kvaShadowPcidFlag) -ne 0)
-                        #Write-Host "KvaShadowInvpcid :" (($flags -band $kvaShadowInvpcidFlag) -ne 0)
-                    }
-                }
-        
-                #Write-Host "Hardware requires kernel VA shadowing:"$kvaShadowRequired
-
-                if ($kvaShadowRequired) {
-
-                    #Write-Host "Windows OS support for kernel VA shadow is present:"$kvaShadowPresent -ForegroundColor $(If ($kvaShadowPresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-                    #Write-Host "Windows OS support for kernel VA shadow is enabled:"$kvaShadowEnabled -ForegroundColor $(If ($kvaShadowEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-
-                    if ($kvaShadowEnabled) {
-                        #Write-Host "Windows OS support for PCID performance optimization is enabled: $kvaShadowPcidEnabled [not required for security]" -ForegroundColor $(If ($kvaShadowPcidEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Blue })
-                    }
-                }
-
-        
-                $object | Add-Member -MemberType NoteProperty -Name KVAShadowRequired -Value $kvaShadowRequired
-                $object | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportPresent -Value $kvaShadowPresent
-                $object | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportEnabled -Value $kvaShadowEnabled
-                $object | Add-Member -MemberType NoteProperty -Name KVAShadowPcidEnabled -Value $kvaShadowPcidEnabled
-
-                #
+                Write-Verbose ''
+            
                 # Provide guidance as appropriate.
-                #
-
-                $actions = @()
+                Get-SuggestedActions -StatusObject $StatusObject
         
-                if ($btiHardwarePresent -eq $false) {
-                    $actions += "Install BIOS/firmware update provided by your device OEM that enables hardware support for the branch target injection mitigation."
-                }
-
-                if ($btiWindowsSupportPresent -eq $false -or $kvaShadowPresent -eq $false) {
-                    $actions += "Install the latest available updates for Windows with support for speculation control mitigations."
-                }
-
-                if (($btiHardwarePresent -eq $true -and $btiWindowsSupportEnabled -eq $false) -or ($kvaShadowRequired -eq $true -and $kvaShadowEnabled -eq $false)) {
-                    $guidanceUri = ""
-                    $guidanceType = ""
-
-            
-                    $os = Get-WmiObject Win32_OperatingSystem
-
-                    if ($os.ProductType -eq 1) {
-                        # Workstation
-                        $guidanceUri = "https://support.microsoft.com/help/4073119"
-                        $guidanceType = "Client"
-                    }
-                    else {
-                        # Server/DC
-                        $guidanceUri = "https://support.microsoft.com/help/4072698"
-                        $guidanceType = "Server"
-                    }
-
-                    $actions += "Follow the guidance for enabling Windows $guidanceType support for speculation control mitigations described in $guidanceUri"
-                }
-
-                if ($actions.Length -gt 0) {
-
-                    #Write-Host
-                    #Write-Host "Suggested actions" -ForegroundColor Cyan
-                    #Write-Host 
-
-                    foreach ($action in $actions) {
-                        #Write-Host " *" $action
-                    }
-                }
-
-
-                return $object
+                return $StatusObject
 
             }
             finally {
                 if ($systemInformationPtr -ne [System.IntPtr]::Zero) {
                     [System.Runtime.InteropServices.Marshal]::FreeHGlobal($systemInformationPtr)
                 }
- 
+
                 if ($returnLengthPtr -ne [System.IntPtr]::Zero) {
                     [System.Runtime.InteropServices.Marshal]::FreeHGlobal($returnLengthPtr)
                 }
-            }    
+            }
+        }
+        End {}
+    }
+
+    function Get-ProcessorInfo {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory = $true)]
+            [ref]$StatusObject
+        )
+        $cpu = Get-WmiObject Win32_Processor | select -first 1
+
+        if ($cpu.Manufacturer -eq "AuthenticAMD") {
+            $StatusObject.Value.kvaShadowRequired = $false
+        }
+        elseif ($cpu.Manufacturer -eq "GenuineIntel") {
+            $regex = [regex]'Family (\d+) Model (\d+) Stepping (\d+)'
+            $result = $regex.Match($cpu.Description)
+            
+            if ($result.Success) {
+                $family = [System.UInt32]$result.Groups[1].Value
+                $model = [System.UInt32]$result.Groups[2].Value
+                $stepping = [System.UInt32]$result.Groups[3].Value
+                
+                if (($family -eq 0x6) -and ($model -in @(0x1c, 0x26, 0x27, 0x36, 0x35))) {
+                    $StatusObject.Value.kvaShadowRequired = $false
+                }
+            }
+        }
+        else {
+            throw ("Unsupported processor manufacturer: {0}" -f $cpu.Manufacturer)
         }
     }
 
+    function Get-SuggestedActions {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory = $true)]
+            [hashtable]$StatusObject
+        )
+    
+        [string[]]$actions = $(
+            if (-not $StatusObject.btiHardwarePresent) {
+                "Install BIOS/firmware update provided by your device OEM that enables hardware support for the branch target injection mitigation."
+            }
+
+            if ((-not $StatusObject.btiWindowsSupportPresent) -or (-not $StatusObject.kvaShadowPresent)) {
+                "Install the latest available updates for Windows with support for speculation control mitigations."
+            }
+
+            if ($StatusObject.btiHardwarePresent -and (-not $StatusObject.btiWindowsSupportEnabled) -or ($StatusObject.kvaShadowRequired -and (-not $StatusObject.kvaShadowEnabled))) {
+                $HostOSType = @(@('Server', '4072698'), @('Client', '4073119'))
+                $os = Get-WmiObject Win32_OperatingSystem
+
+                "Follow the guidance for enabling Windows {0} support for speculation control mitigations described in https://support.microsoft.com/help/{1}" -f $HostOSType[[int]($os.ProductType -eq 1)]
+            }
+        )
+
+        if ($actions.Length -gt 0) {
+            Write-Verbose "Suggested actions" -Verbose
+
+            foreach ($action in $actions) {
+                Write-Verbose " * $action" -Verbose
+            }
+        }
+    }
+
+    function Test-QueryReturn {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory = $true)]
+            $QueryResult,
+            [Parameter(Mandatory = $true)]
+            [string]$QueryTarget
+        )
+
+        if ($QueryResult -in @(0xc0000003, 0xc0000002)) {
+            $false
+        }
+        elseif ($QueryResult -ne 0) {
+            throw (("Querying $QueryTarget information failed with error {0:X8}" -f $QueryResult))
+        }
+        else {
+            $true
+        }
+    }
+
+    function Test-BTI {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory = $true)]
+            [ref]$StatusObject,
+            [Parameter(Mandatory = $true)]
+            [ref]$systemInformationPtr,
+            [Parameter(Mandatory = $true)]
+            [ref]$returnLengthPtr
+        )
+        Begin {
+            $scf = @{
+                BpbEnabled                   = [System.UInt32]0x01
+                BpbDisabledSystemPolicy      = [System.UInt32]0x02
+                BpbDisabledNoHardwareSupport = [System.UInt32]0x04
+                HwReg1Enumerated             = [System.UInt32]0x08
+                HwReg2Enumerated             = [System.UInt32]0x10
+                HwMode1Present               = [System.UInt32]0x20
+                HwMode2Present               = [System.UInt32]0x40
+                SmepPresent                  = [System.UInt32]0x80
+            }
+            [System.UInt32]$systemInformationClass = 201
+            [System.UInt32]$systemInformationLength = 4
+            Write-Verbose "Speculation control settings for CVE-2017-5715 [branch target injection]"
+        }
+        Process {
+            $btiQuery = $ntdll::NtQuerySystemInformation($systemInformationClass, $systemInformationPtr.Value, $systemInformationLength, $returnLengthPtr.Value)
+
+            if (Test-QueryReturn -QueryResult $btiQuery -QueryTarget 'branch target injection' -ErrorAction Stop) {
+                [System.UInt32]$flags = [System.UInt32][System.Runtime.InteropServices.Marshal]::ReadInt32($systemInformationPtr.Value)
+
+                $StatusObject.Value.btiHardwarePresent = ((($flags -band $scf.HwReg1Enumerated) -ne 0) -or (($flags -band $scf.HwReg2Enumerated)))
+                $StatusObject.Value.btiWindowsSupportPresent = $true
+                $StatusObject.Value.btiWindowsSupportEnabled = (($flags -band $scf.BpbEnabled) -ne 0)
+
+                if ($StatusObject.Value.btiWindowsSupportEnabled -eq $false) {
+                    $StatusObject.Value.btiDisabledBySystemPolicy = (($flags -band $scf.BpbDisabledSystemPolicy) -ne 0)
+                    $StatusObject.Value.btiDisabledByNoHardwareSupport = (($flags -band $scf.BpbDisabledNoHardwareSupport) -ne 0)
+                }
+            
+                $scf.GetEnumerator() | % {
+                    Write-Verbose -Message " > $($_.Key) : $(($flags -band $_.Value) -ne 0)"
+                }
+            }
+        }
+        End {
+            Write-Verbose " > Hardware support for branch target injection mitigation is present: $($StatusObject.Value.btiHardwarePresent)"
+            Write-Verbose " > Windows OS support for branch target injection mitigation is present: $($StatusObject.Value.btiWindowsSupportPresent)"
+            Write-Verbose " > Windows OS support for branch target injection mitigation is enabled: $($StatusObject.Value.btiWindowsSupportEnabled)"
+  
+            if ($StatusObject.Value.btiWindowsSupportPresent -and (-not $StatusObject.Value.btiWindowsSupportEnabled)) {
+                Write-Verbose " > Windows OS support for branch target injection mitigation is disabled by system policy: $($StatusObject.Value.btiDisabledBySystemPolicy)"
+                Write-Verbose " > Windows OS support for branch target injection mitigation is disabled by absence of hardware support: $($StatusObject.Value.btiDisabledByNoHardwareSupport)"
+            }
+        }
+
+    }
+
+    function Test-KVA {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory = $true)]
+            [ref]$StatusObject,
+            [Parameter(Mandatory = $true)]
+            [ref]$systemInformationPtr,
+            [Parameter(Mandatory = $true)]
+            [ref]$returnLengthPtr
+        )
+
+        Begin {
+            $kvaFlags = @{
+                kvaShadowEnabled    = [System.UInt32]0x01
+                kvaShadowUserGlobal = [System.UInt32]0x02
+                kvaShadowPcid       = [System.UInt32]0x04
+                kvaShadowInvpcid    = [System.UInt32]0x08
+                kvaShadowPresent    = ''
+            }
+            [System.UInt32]$systemInformationClass = 196
+            [System.UInt32]$systemInformationLength = 4
+        }
+        Process {
+        
+            Write-Verbose "Speculation control settings for CVE-2017-5754 [rogue data cache load]"
+
+            Get-ProcessorInfo -StatusObject ([ref]($StatusObject.Value))
+            
+            $kvaQuery = $ntdll::NtQuerySystemInformation($systemInformationClass, $systemInformationPtr.Value, $systemInformationLength, $returnLengthPtr.Value)
+
+            if (Test-QueryReturn -QueryResult $kvaQuery -QueryTarget 'kernel VA shadow' -ErrorAction Stop) {
+                [System.UInt32]$flags = [System.UInt32][System.Runtime.InteropServices.Marshal]::ReadInt32($systemInformationPtr.Value)
+
+                [string[]]($StatusObject.Value.Keys | ? {$_ -match "^kva"}) | % {
+                    $StatusObject.Value[$_] = (($flags -band $kvaFlags[$_]) -ne 0)
+                }
+
+                $kvaFlags.kvaShadowPresent = $true
+
+            }
+        }
+        End {
+            Write-Verbose " > Hardware requires kernel VA shadowing: $($StatusObject.Value.kvaShadowRequired)"
+
+            if ($StatusObject.Value.kvaShadowRequired) {
+
+                Write-Verbose " > Windows OS support for kernel VA shadow is present: $($StatusObject.Value.kvaShadowPresent)"
+                Write-Verbose " > Windows OS support for kernel VA shadow is enabled: $($StatusObject.Value.kvaShadowEnabled)"
+
+                if ($StatusObject.Value.kvaShadowEnabled) {
+                    Write-Verbose "Windows OS support for PCID optimization is enabled: $($StatusObject.Value.kvaShadowPcidEnabled) [not required for security]"
+                }
+            }
+        }
+
+    }
     function Get-SystemInformation {
         $ComputerName = $env:COMPUTERNAME
         $Win32_ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
@@ -1119,7 +1136,7 @@ $GetMeltdownStatusInformation = {
     }    
 
     $SystemInformation = Get-SystemInformation
-    $SpeculationControlSettings = Get-SpeculationControlSettings
+    $SpeculationControlSettings = Test-SpeculationControlSettings -ErrorAction Continue
     $CVE20175754mitigated = Get-CVE-2017-5754 $SpeculationControlSettings $SystemInformation
     $CVE20175715mitigated = Get-CVE-2017-5715 $SpeculationControlSettings $SystemInformation
     $CVE20175753mitigated = Get-CVE-2017-5753 $SystemInformation
@@ -1160,22 +1177,6 @@ $GetMeltdownStatusInformation = {
     $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $SystemInformation.InstalledUpdates
     $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $SystemInformation.Uptime
     $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $SystemInformation.ExecutionDate
-    $defaultDisplaySet = 
-    'ComputerName', 
-    'CVE-2017-5754 mitigated', 
-    'CVE-2017-5715 mitigated', 
-    'CVE-2017-5753 mitigated in Edge',
-    'CVE-2017-5753 mitigated in IE',  
-    'CVE-2017-5753 mitigated in Chrome',
-    'CVE-2017-5753 mitigated in Firefox',
-    'Manufacturer',
-    'Model',
-    'BIOS',
-    'CPU',
-    'OperatingSystem'        
-    $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
-    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
-    $output | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     $output
 }
 
