@@ -49,11 +49,12 @@
     $Report | ConvertTo-Csv -NoTypeInformation -Delimiter ',' | Out-File C:\report.csv
     $Report | Out-GridView
 
-.OUTPUTS
-    [PSCustomObject]
+
 .NOTES
     Author: VRDSE
+    Version: 0.3
 #>
+[CmdletBinding()]
 param(
     # Specify remote computers to query against. If not set, local computer is queried.
     [Parameter()]
