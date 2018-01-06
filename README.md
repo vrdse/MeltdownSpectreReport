@@ -67,7 +67,7 @@ Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 ```
 # Properties
 ## Mitigation Status
-This highly relies on the information from [Spectre still unfixed, unlike what Intel says](https://gist.github.com/woachk/2f86755260f2fee1baf71c90cd6533e9) and [CPU security bugs caused by speculative execution](https://github.com/marcan/speculation-bugs/blob/master/README.md).
+This highly relies on the information from [Spectre still unfixed, unlike what Intel says](https://gist.github.com/woachk/2f86755260f2fee1baf71c90cd6533e9) and [CPU security bugs caused by speculative execution](https://github.com/marcan/speculation-bugs/blob/master/README.md). I highly recommend to read them.
 
 *Note: Not every mitigation, especially for CVE-2017-5753 is of the same quality. As the root cause relies in the CPU, all these mitigations are not really a **fix** to the actual problem. Mitigation means, it's "more difficult to exploit", and not every mitigation makes it equally difficult. ;)*
 
