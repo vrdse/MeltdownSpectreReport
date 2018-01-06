@@ -53,7 +53,7 @@
     Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 .NOTES
     Author: VRDSE
-    Version: 0.4
+    Version: 0.4.1
 #>
 [CmdletBinding()]
 param(
@@ -949,7 +949,8 @@ $GetMeltdownStatusInformation = {
         $isIE = Test-Path -Path 'C:\Program Files\Internet Explorer\iexplore.exe'
 
         # Test for Firefox
-        $isFirefox = Test-Path 'C:\Program Files\Mozilla Firefox\firefox.exe'
+        $isFirefox = (Test-Path -Path 'C:\Program Files\Mozilla Firefox\firefox.exe') -or
+        (Test-Path -Path 'C:\Program Files (x86)\Mozilla Firefox\firefox.exe')
 
         <#
         Customers need to enable mitigations to help protect against speculative execution side-channel vulnerabilities.
@@ -1116,7 +1117,9 @@ $GetMeltdownStatusInformation = {
         # Firefox
         if ($SystemInformation.isFirefox) {
             # See https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/
-            $FirefoxVersion = (Get-Item -Path 'C:\Program Files\Mozilla Firefox\firefox.exe').VersionInfo.ProductVersion -as [version]
+            $Firefox = (Get-Item -Path 'C:\Program Files\Mozilla Firefox\firefox.exe', 
+                'C:\Program Files (x86)\Mozilla Firefox\firefox.exe' -ErrorAction SilentlyContinue)
+            $FirefoxVersion = ($Firefox.VersionInfo.ProductVersion | Sort-Object)[0] -as [version]
             if ($FirefoxVersion -ge [version]'57.0.4') {
                 $FirefoxMitigated = $true
             }
