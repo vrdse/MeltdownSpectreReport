@@ -33,7 +33,7 @@
     KVAShadowWindowsSupportPresent     : True
     KVAShadowWindowsSupportEnabled     : True
     KVAShadowPcidEnabled               : True
-    OSMitigationEnabled                : True
+    OSMitigationRegKeySet                : True
     AVCompatibility                    : True
     InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
                                         @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
@@ -962,10 +962,10 @@ $GetMeltdownStatusInformation = {
         $FeatureSettingsOverride = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverride # must be 0
         $FeatureSettingsOverrideMask = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverrideMask # must be 3
         if (($FeatureSettingsOverride -eq 0) -and ($FeatureSettingsOverrideMask -eq 3)) {
-            $OSMitigationEnabled = $true
+            $OSMitigationRegKeySet = $true
         }
         else {
-            $OSMitigationEnabled = $false
+            $OSMitigationRegKeySet = $false
         }
 
 
@@ -996,7 +996,7 @@ $GetMeltdownStatusInformation = {
         $output | Add-Member -MemberType NoteProperty -Name isIE -Value $isIE
         $output | Add-Member -MemberType NoteProperty -Name isChrome -Value $isChrome
         $output | Add-Member -MemberType NoteProperty -Name isFirefox -Value $isFirefox        
-        $output | Add-Member -MemberType NoteProperty -Name OSMitigationEnabled -Value $OSMitigationEnabled
+        $output | Add-Member -MemberType NoteProperty -Name OSMitigationRegKeySet -Value $OSMitigationRegKeySet
         $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $AVCompatibility
         $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $Hotfixes
         $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $Uptime
@@ -1025,8 +1025,7 @@ $GetMeltdownStatusInformation = {
         # probably more -and then required, but better safe then sorry
         if (($SpeculationControlSettings.BTIHardwarePresent -eq $true) -and 
             ($SpeculationControlSettings.BTIWindowsSupportPresent -eq $true) -and
-            ($SpeculationControlSettings.BTIWindowsSupportEnabled -eq $true) -and
-            ($SystemInformation.OSMitigationEnabled -eq $true)) {
+            ($SpeculationControlSettings.BTIWindowsSupportEnabled -eq $true)) {
             $mitigated = $true
         }
         else {
@@ -1151,7 +1150,7 @@ $GetMeltdownStatusInformation = {
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportPresent -Value $SpeculationControlSettings.KVAShadowWindowsSupportPresent
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportEnabled -Value $SpeculationControlSettings.KVAShadowWindowsSupportEnabled
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowPcidEnabled -Value $SpeculationControlSettings.KVAShadowPcidEnabled
-    $output | Add-Member -MemberType NoteProperty -Name OSMitigationEnabled -Value $SystemInformation.OSMitigationEnabled
+    $output | Add-Member -MemberType NoteProperty -Name OSMitigationRegKeySet -Value $SystemInformation.OSMitigationRegKeySet
     $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $SystemInformation.AVCompatibility
     $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $SystemInformation.InstalledUpdates
     $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $SystemInformation.Uptime
