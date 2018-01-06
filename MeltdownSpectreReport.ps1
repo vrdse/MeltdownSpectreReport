@@ -884,124 +884,268 @@ $GetMeltdownStatusInformation = {
         }
     }
 
-    $Win32_ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
-    $Win32_OperatingSystem = Get-WmiObject -Class Win32_OperatingSystem
-    $ComputerManufacturer = $Win32_ComputerSystem.Manufacturer
-    $ComputerModel = $Win32_ComputerSystem.Model
-    $BIOS = (Get-WmiObject -Class Win32_BIOS).Name
-    $Processor = (Get-WmiObject -Class Win32_Processor).Name
-    $OperatingSystem = $Win32_OperatingSystem.Caption
-    $OSReleaseId = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue).ReleaseId
-    $LastReboot = [Management.ManagementDateTimeConverter]::ToDateTime($Win32_OperatingSystem.LastBootUptime)
-    $Uptime = ((Get-Date) - $LastReboot).ToString()
-    $Hotfixes = Get-WmiObject -Class Win32_QuickFixEngineering | 
-        Select-Object HotFixId, Description, InstalledOn, @{
-        Name       = 'ComputerName'; 
-        Expression = {$env:COMPUTERNAME}
-    } | 
-        Sort-Object HotFixId
-    $ExecutionDate = Get-Date -Format d
+    function Get-SystemInformation {
+        $ComputerName = $env:COMPUTERNAME
+        $Win32_ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
+        $Win32_OperatingSystem = Get-WmiObject -Class Win32_OperatingSystem
+        $ComputerManufacturer = $Win32_ComputerSystem.Manufacturer
+        $ComputerModel = $Win32_ComputerSystem.Model
+        $BIOS = (Get-WmiObject -Class Win32_BIOS).Name
+        $Processor = (Get-WmiObject -Class Win32_Processor).Name
+        $OperatingSystem = $Win32_OperatingSystem.Caption
+        $OSReleaseId = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue).ReleaseId
+        $LastReboot = [Management.ManagementDateTimeConverter]::ToDateTime($Win32_OperatingSystem.LastBootUptime)
+        $Uptime = ((Get-Date) - $LastReboot).ToString()
+        $Hotfixes = Get-WmiObject -Class Win32_QuickFixEngineering | 
+            Select-Object HotFixId, Description, InstalledOn, @{
+            Name       = 'ComputerName'; 
+            Expression = {$env:COMPUTERNAME}
+        } | Sort-Object HotFixId
+        $ExecutionDate = Get-Date -Format d
 
-    $vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
-    if ($vmms.Status -eq 'Running') {
-        $isHyperV = $true
+        $vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
+        if ($vmms.Status -eq 'Running') {
+            $isHyperV = $true
+        }
+        else {
+            $isHyperV = $false
+        }
+
+        $TerminalServerMode = (Get-WmiObject -Namespace root\CIMV2/TerminalServices -Class Win32_TerminalServiceSetting).TerminalServerMode
+        if ($TerminalServerMode -eq 1) {
+            $isTerminalServer = $true
+        }
+        else {
+            $isTerminalServer = $false
+        }
+
+        # Test for Docker
+        if ($env:Path -match 'docker') {
+            $isDocker = $true
+        }
+        else {
+            $isDocker = $false
+        }
+
+        # Test for Chrome 
+        # WMI Class Win32_Product does not show Chrome for me.
+        # Win32_InstalledWin32Program requies administrative privileges and Windows 7
+        $isChrome = Test-Path -Path 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'  
+
+        # Test for Edge
+        if ($OSReleaseId) {
+            # Is Windows 10
+            if (Get-AppxPackage -Name Microsoft.MicrosoftEdge) {
+                $isEdge = $true
+            }
+            else {
+                $isEdge = $false
+            }
+        }
+        else {
+            $isEdge = $false
+        }
+
+        # Test for IE
+        $isIE = Test-Path -Path 'C:\Program Files (x86)\Internet Explorer\iexplore.exe'
+
+        # Test for Firefox
+        $isFirefox = Test-Path 'C:\Program Files\Mozilla Firefox\firefox.exe'
+
+        <#
+        Customers need to enable mitigations to help protect against speculative execution side-channel vulnerabilities.
+
+        Enabling these mitigations may affect performance. The actual performance impact will depend on multiple factors such as the specific chipset in your physical host and the workloads that are running. Microsoft recommends customers assess the performance impact for their environment and make the necessary adjustments if needed.
+
+        Your server is at increased risk if your server falls into one of the following categories:
+
+        Hyper-V hosts
+        Remote Desktop Services Hosts (RDSH)
+        For physical hosts or virtual machines that are running untrusted code such as containers or untrusted extensions for database, untrusted web content or workloads that run code that is provided from external sources.
+        #>
+        $FeatureSettingsOverride = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverride # must be 0
+        $FeatureSettingsOverrideMask = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverrideMask # must be 3
+        if (($FeatureSettingsOverride -eq 0) -and ($FeatureSettingsOverrideMask -eq 3)) {
+            $OSMitigationEnabled = $true
+        }
+        else {
+            $OSMitigationEnabled = $false
+        }
+
+
+        <#
+        Customers without Anti-Virus
+        Microsoft recommends all customers protect their devices by running a supported anti-virus program. Customers can also take advantage of built-in anti-virus protection, Windows Defender for Windows 10 devices or Microsoft Security Essentials for Windows 7 devices. These solutions are compatible in cases where customers can’t install or run anti-virus software. Microsoft recommends manually setting the registry key in the following section to receive the January 2018 security updates.
+        #>
+        $AVRegKeyValue = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\QualityCompat' -ErrorAction SilentlyContinue).'cadca5fe-87d3-4b96-b7fb-a231484277cc' # must be 0
+        if ($AVRegKeyValue -eq 0) {
+            $AVCompatibility = $true
+        }
+        else {
+            $AVCompatibility = $false
+        }
+
+        $output = New-Object -TypeName PSCustomObject
+        $output | Add-Member -MemberType NoteProperty -Name ComputerName -Value $ComputerName
+        $output | Add-Member -MemberType NoteProperty -Name Manufacturer -Value $ComputerManufacturer
+        $output | Add-Member -MemberType NoteProperty -Name Model -Value $ComputerModel
+        $output | Add-Member -MemberType NoteProperty -Name BIOS -Value $BIOS
+        $output | Add-Member -MemberType NoteProperty -Name CPU -Value $Processor
+        $output | Add-Member -MemberType NoteProperty -Name OperatingSystem -Value $OperatingSystem
+        $output | Add-Member -MemberType NoteProperty -Name OSReleaseId -Value $OSReleaseId
+        $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $isHyperV
+        $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $isTerminalServer
+        $output | Add-Member -MemberType NoteProperty -Name isDocker -Value $isDocker
+        $output | Add-Member -MemberType NoteProperty -Name isEdge -Value $isEdge
+        $output | Add-Member -MemberType NoteProperty -Name isIE -Value $isIE
+        $output | Add-Member -MemberType NoteProperty -Name isChrome -Value $isChrome
+        $output | Add-Member -MemberType NoteProperty -Name isFirefox -Value $isFirefox        
+        $output | Add-Member -MemberType NoteProperty -Name OSMitigationEnabled -Value $OSMitigationEnabled
+        $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $AVCompatibility
+        $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $Hotfixes
+        $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $Uptime
+        $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $ExecutionDate
+        $output
     }
-    else {
-        $isHyperV = $false
+
+    # CVE-2017-5754 (Meltdown)
+    function Get-CVE-2017-5754 ($SpeculationControlSettings, $SystemInformation) {
+        if ($SpeculationControlSettings.KVAShadowRequired -eq $false) {
+            $mitigated = $true
+        }
+        elseif (($SpeculationControlSettings.KVAShadowWindowsSupportPresent -eq $true) -and 
+            ($SpeculationControlSettings.KVAShadowWindowsSupportEnabled -eq $true) -and
+            ($SpeculationControlSettings.KVAShadowPcidEnabled -eq $true)) {
+            $mitigated = $true
+        } # What if KVAShadowPcidEnable -eq false?
+        else {
+            $mitigated = $false
+        }
+        $mitigated        
     }
-
-
-    $TerminalServerMode = (Get-WmiObject -Namespace root\CIMV2/TerminalServices -Class Win32_TerminalServiceSetting).TerminalServerMode
-    if ($TerminalServerMode -eq 1) {
-        $isTerminalServer = $true
-    }
-    else {
-        $isTerminalServer = $false
-    }
-
-    # Test for Docker
-    if ($env:Path -match 'docker') {
-        $isDocker = $true
-    }
-    else {
-        $isDocker = $false
-    }
-
-
-    # CVE-2017-5754 (Meltdown) & CVE-2017-5715 (Spectre)
-    $SpeculationControlSettings = Get-SpeculationControlSettings
-
+    
+    # CVE-2017-5715 (Spectre)
+    function Get-CVE-2017-5715 ($SpeculationControlSettings, $SystemInformation) {
+        # probably more -and then required, but better safe then sorry
+        if (($SpeculationControlSettings.BTIHardwarePresent -eq $true) -and 
+            ($SpeculationControlSettings.BTIWindowsSupportPresent -eq $true) -and
+            ($SpeculationControlSettings.BTIWindowsSupportEnabled -eq $true) -and
+            ($SystemInformation.OSMitigationEnabled -eq $true)) {
+            $mitigated = $true
+        }
+        else {
+            $mitigated = $false
+        }
+        $mitigated
+    }   
 
     # CVE-2017-5753 (Spectre)
+    function Get-CVE-2017-5753 ($SystemInformation) {
+        function IsHotfixInstalled ($ListOfRequiredKBs, $ListOfInstalledKBs) {
+            <#
+            .SYNOPSIS
+                If any of the required KBs is installed, the function returns true
+            #>
+            foreach ($KB in $ListOfRequiredKBs) {
+                if ($ListOfInstalledKBs -contains $KB) {
+                    $installed = $true
+                    break
+                }
+            }
+            if ($installed) {
+                $true
+            }
+            else {
+                $false
+            }
+        }
 
+        # Chrome
+        # https://www.chromium.org/Home/chromium-security/site-isolation 
+        if ($SystemInformation.isChrome) {
+            $ChromeVersion = (Get-Item 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe').VersionInfo.ProductVersion -as [version]
+            if ($ChromeVersion.Major -gt 63) {
+                $ChromeMitigated = $true
+            }
+            elseif ($ChromeVersion.Major -eq 63) {
+                $ChromeSitePerProcessSetting = (Get-ItemProperty -Path HKLM:\Software\Policies\Google\Chrome -ErrorAction SilentlyContinue).SitePerProcess # must be 1
+                if ($ChromeSitePerProcessSetting -eq 1) {
+                    $ChromeMitigated = $true
+                }
+                else {
+                    $ChromeMitigated = $false
+                }
+            }
+            else {
+                $ChromeMitigated = $false
+            }
+        } 
 
-    <#
-    Customers need to enable mitigations to help protect against speculative execution side-channel vulnerabilities.
+        # Microsoft Browser (https://blogs.windows.com/msedgedev/2018/01/03/speculative-execution-mitigations-microsoft-edge-internet-explorer/)
+        # From my understanding, the patch is effective as soon as the patch is installed
 
-    Enabling these mitigations may affect performance. The actual performance impact will depend on multiple factors such as the specific chipset in your physical host and the workloads that are running. Microsoft recommends customers assess the performance impact for their environment and make the necessary adjustments if needed.
+        # Edge
+        if ($SystemInformation.isEdge) {
+            #KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
+            $EdgeUpdates = 'KB4056893', 'KB4056890', 'KB4056891', 'KB4056892', 'KB4056888'
+            $EdgeMitigated = IsHotfixInstalled $EdgeUpdates $SystemInformation.InstalledUpdates.HotFixId
+        } 
 
-    Your server is at increased risk if your server falls into one of the following categories:
+        # Internet Explorer 
+        if ($SystemInformation.isIE) {
+            # KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
+            $IEUpdates = 'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892'
+            $IEMitigated = IsHotfixInstalled $IEUpdates $SystemInformation.InstalledUpdates.HotFixId
+        } 
 
-    Hyper-V hosts
-    Remote Desktop Services Hosts (RDSH)
-    For physical hosts or virtual machines that are running untrusted code such as containers or untrusted extensions for database, untrusted web content or workloads that run code that is provided from external sources.
-    #>
-    $FeatureSettingsOverride = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverride # must be 0
-    $FeatureSettingsOverrideMask = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverrideMask # must be 3
-    if (($FeatureSettingsOverride -eq 0) -and ($FeatureSettingsOverrideMask -eq 3)) {
-        $OSMitigationEnabled = $true
-    }
-    else {
-        $OSMitigationEnabled = $false
-    }
+        # Firefox
+        if ($SystemInformation.isFirefox) {
+            # See https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/
+            $FirefoxVersion = (Get-Item -Path 'C:\Program Files\Mozilla Firefox\firefox.exe').VersionInfo.ProductVersion -as [version]
+            if ($FirefoxVersion -ge [version]'57.0.4') {
+                $FirefoxMitigated = $true
+            }
+            else {
+                $FirefoxMitigated = $false
+            }
+        }
 
+        $output = New-Object -TypeName PSCustomObject
+        $output | Add-Member -MemberType NoteProperty -Name EdgeMitigated -Value $EdgeMitigated
+        $output | Add-Member -MemberType NoteProperty -Name IEMitigated -Value $IEMitigated
+        $output | Add-Member -MemberType NoteProperty -Name ChromeMitigated -Value $ChromeMitigated
+        $output | Add-Member -MemberType NoteProperty -Name FirefoxMitigated -Value $FirefoxMitigated
+        $output
+    }    
 
-    <#
-    Customers without Anti-Virus
-    Microsoft recommends all customers protect their devices by running a supported anti-virus program. Customers can also take advantage of built-in anti-virus protection, Windows Defender for Windows 10 devices or Microsoft Security Essentials for Windows 7 devices. These solutions are compatible in cases where customers can’t install or run anti-virus software. Microsoft recommends manually setting the registry key in the following section to receive the January 2018 security updates.
-    #>
-    $AVRegKeyValue = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\QualityCompat' -ErrorAction SilentlyContinue).'cadca5fe-87d3-4b96-b7fb-a231484277cc' # must be 0
-    if ($AVRegKeyValue -eq 0) {
-        $AVCompatiblity = $true
-    }
-    else {
-        $AVCompatiblity = $false
-    }
-
-
-    # Chrome
-    # https://www.chromium.org/Home/chromium-security/site-isolation   
-    if (Test-Path -Path 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe') {
-        $ChromeVersion = (Get-Item 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe').VersionInfo.ProductVersion -as [version]
-    } 
-    else {
-        $ChromeVersion = 'not installed'
-    }
-    $ChromeSitePerProcessSetting = (Get-ItemProperty -Path HKLM:\Software\Policies\Google\Chrome -ErrorAction SilentlyContinue).SitePerProcess # must be 1
-    if ($ChromeSitePerProcessSetting -eq 1) {
-        $ChromeSitePerProcess = $true
-    }
-    else {
-        $ChromeSitePerProcess = $false
-    }
-
-    #Firefox
-
-    #Edge
-
-    #Internet Explorer
+    $SystemInformation = Get-SystemInformation
+    $SpeculationControlSettings = Get-SpeculationControlSettings
+    $CVE20175754mitigated = Get-CVE-2017-5754 $SpeculationControlSettings $SystemInformation
+    $CVE20175715mitigated = Get-CVE-2017-5715 $SpeculationControlSettings $SystemInformation
+    $CVE20175753mitigated = Get-CVE-2017-5753 $SystemInformation
 
     $output = New-Object -TypeName PSCustomObject
-    $output | Add-Member -MemberType NoteProperty -Name ComputerName -Value $env:COMPUTERNAME
-    $output | Add-Member -MemberType NoteProperty -Name Manufacturer -Value $ComputerManufacturer
-    $output | Add-Member -MemberType NoteProperty -Name Model -Value $ComputerModel
-    $output | Add-Member -MemberType NoteProperty -Name BIOS -Value $BIOS
-    $output | Add-Member -MemberType NoteProperty -Name CPU -Value $Processor
-    $output | Add-Member -MemberType NoteProperty -Name OperatingSystem -Value $OperatingSystem
-    $output | Add-Member -MemberType NoteProperty -Name OSReleaseId -Value $OSReleaseId
-    $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $isHyperV
-    $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $isTerminalServer
-    $output | Add-Member -MemberType NoteProperty -Name isDocker -Value $isDocker
+    $output.PSObject.TypeNames.Insert(0, 'MeltdownSpectre.Report')
+    $output | Add-Member -MemberType NoteProperty -Name ComputerName -Value $SystemInformation.ComputerName
+    $output | Add-Member -MemberType NoteProperty -Name Manufacturer -Value $SystemInformation.Manufacturer
+    $output | Add-Member -MemberType NoteProperty -Name Model -Value $SystemInformation.Model
+    $output | Add-Member -MemberType NoteProperty -Name BIOS -Value $SystemInformation.BIOS
+    $output | Add-Member -MemberType NoteProperty -Name CPU -Value $SystemInformation.CPU
+    $output | Add-Member -MemberType NoteProperty -Name OperatingSystem -Value $SystemInformation.OperatingSystem
+    $output | Add-Member -MemberType NoteProperty -Name OSReleaseId -Value $SystemInformation.OSReleaseId
+    $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $SystemInformation.isHyperV
+    $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $SystemInformation.isTerminalServer
+    $output | Add-Member -MemberType NoteProperty -Name isDocker -Value $SystemInformation.isDocker
+    $output | Add-Member -MemberType NoteProperty -Name isIE -Value $SystemInformation.isIE
+    $output | Add-Member -MemberType NoteProperty -Name isEdge -Value $SystemInformation.isEdge
+    $output | Add-Member -MemberType NoteProperty -Name isChrome -Value $SystemInformation.isChrome
+    $output | Add-Member -MemberType NoteProperty -Name isFirefox -Value $SystemInformation.isFirefox
+    $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5754 mitigated' -Value $CVE20175754mitigated
+    $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5715 mitigated' -Value $CVE20175715mitigated
+    $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5753 mitigated in Edge' -Value $CVE20175753mitigated.EdgeMitigated
+    $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5753 mitigated in IE' -Value $CVE20175753mitigated.IEMitigated
+    $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5753 mitigated in Chrome' -Value $CVE20175753mitigated.ChromeMitigated
+    $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5753 mitigated in Firefox' -Value $CVE20175753mitigated.FirefoxMitigated
     $output | Add-Member -MemberType NoteProperty -Name BTIHardwarePresent -Value $SpeculationControlSettings.BTIHardwarePresent
     $output | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportPresent -Value $SpeculationControlSettings.BTIWindowsSupportPresent
     $output | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportEnabled -Value $SpeculationControlSettings.BTIWindowsSupportEnabled
@@ -1011,13 +1155,27 @@ $GetMeltdownStatusInformation = {
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportPresent -Value $SpeculationControlSettings.KVAShadowWindowsSupportPresent
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowWindowsSupportEnabled -Value $SpeculationControlSettings.KVAShadowWindowsSupportEnabled
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowPcidEnabled -Value $SpeculationControlSettings.KVAShadowPcidEnabled
-    $output | Add-Member -MemberType NoteProperty -Name OSMitigationEnabled -Value $OSMitigationEnabled
-    $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $AVCompatiblity
-    $output | Add-Member -MemberType NoteProperty -Name ChromeVersion -Value $ChromeVersion
-    $output | Add-Member -MemberType NoteProperty -Name ChromeSitePerProcess -Value $ChromeSitePerProcess
-    $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $Hotfixes
-    $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $Uptime
-    $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $ExecutionDate
+    $output | Add-Member -MemberType NoteProperty -Name OSMitigationEnabled -Value $SystemInformation.OSMitigationEnabled
+    $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $SystemInformation.AVCompatibility
+    $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $SystemInformation.InstalledUpdates
+    $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $SystemInformation.Uptime
+    $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $SystemInformation.ExecutionDate
+    $defaultDisplaySet = 
+    'ComputerName', 
+    'CVE-2017-5754 mitigated', 
+    'CVE-2017-5715 mitigated', 
+    'CVE-2017-5753 mitigated in Edge',
+    'CVE-2017-5753 mitigated in IE',  
+    'CVE-2017-5753 mitigated in Chrome',
+    'CVE-2017-5753 mitigated in Firefox',
+    'Manufacturer',
+    'Model',
+    'BIOS',
+    'CPU',
+    'OperatingSystem'        
+    $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
+    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
+    $output | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     $output
 }
 
@@ -1027,7 +1185,7 @@ if ($ComputerName) {
 
     Invoke-Parallel -InputObject $CimSession -ScriptBlock {
         Invoke-Command -ScriptBlock $GetMeltdownStatusInformation -Session $_
-    } -ImportVariables
+    } -ImportVariable
 }
 else {
     . $GetMeltdownStatusInformation
