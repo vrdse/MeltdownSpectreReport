@@ -1136,7 +1136,7 @@ $GetMeltdownStatusInformation = {
     }    
 
     $SystemInformation = Get-SystemInformation
-    $SpeculationControlSettings = Test-SpeculationControlSettings -ErrorAction Continue
+    $SpeculationControlSettings = Test-SpeculationControlSettings -ErrorAction Continue -Verbose:$false
     $CVE20175754mitigated = Get-CVE-2017-5754 $SpeculationControlSettings $SystemInformation
     $CVE20175715mitigated = Get-CVE-2017-5715 $SpeculationControlSettings $SystemInformation
     $CVE20175753mitigated = Get-CVE-2017-5753 $SystemInformation
