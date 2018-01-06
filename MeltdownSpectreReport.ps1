@@ -33,8 +33,9 @@
     KVAShadowWindowsSupportPresent     : True
     KVAShadowWindowsSupportEnabled     : True
     KVAShadowPcidEnabled               : True
-    OSMitigationRegKeySet              : True
+    OSMitigationRegKeySet              :
     AVCompatibility                    : True
+    MinVmVersionForCpuBasedMitigations : 2.0
     InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
                                         @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
                                         @{HotFixId=KB4051613; Description=Update; InstalledOn=09.11.2017 00:00:00; ComputerName=computer01}, @{HotFixId=KB4053577;

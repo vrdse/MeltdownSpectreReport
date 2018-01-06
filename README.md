@@ -44,12 +44,11 @@ The script includes [Get-SpeculationControlSettings](https://www.powershellgalle
     KVAShadowWindowsSupportPresent     : True
     KVAShadowWindowsSupportEnabled     : True
     KVAShadowPcidEnabled               : True
-    OSMitigationRegKeySet              : True
+    OSMitigationRegKeySet              :
     AVCompatibility                    : True
+    MinVmVersionForCpuBasedMitigations : 2.0
     InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
-                                        @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
-                                        @{HotFixId=KB4051613; Description=Update; InstalledOn=09.11.2017 00:00:00; ComputerName=computer01}, @{HotFixId=KB4053577;
-                                        Description=Security Update; InstalledOn=01.01.2018 00:00:00; ComputerName=computer01}...}
+    @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},...}
     Uptime                             : 15:01:18.3875647
     ExecutionDate                      : 06.01.2018
 
@@ -115,36 +114,41 @@ See [Mitigations landing for new class of timing attack](https://blog.mozilla.or
 
 Is `empty` if Firefox was not found.
 
-## isHyperV
+## Roles
+
+### isHyperV
 Is `true` if `vmms` (Hyper-V Management) Service is running. 
 
 Hypervisors are at increased risk.
 
-## isTerminalServer
+### isTerminalServer
 Is `true` if `TerminalServerMode` is `1`. 
 
 Terminal Servers (Remote Desktop Servers) are at increased risk.
 
-## isDocker
+### isDocker
 Is `true` if `PATH` system variable contains `docker` (which is the default). 
 
 Container hoster are at increased risk.
 
-## BTI*
+## SpeculationControlSettings
+
+### BTI*
 BTI is *Branch Target Injection* as described in [CVE-2017-5715](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5715) alias [Spectre](https://spectreattack.com/) (Variant 2). 
 
 This vulnerability requires always a microcode update for the CPU, which will be offered by the hardware OEM.
 
 These properties might give you further insights, why `CVE-2017-5715 mitigated` is `false`.
 
-## KVA*
+### KVA*
 KVA or Kernel VA (also known as KPTI (Kernel page-table isolation) or KAISER) removes the mapping of kernel memory in user space process and thus mitigates the practical explotation of [CVE-2017-5754](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754) alias [Meltdown](https://meltdownattack.com/).
 
 `KVAShadowPcidEnabled`, too, needs the microcode CPU update that comes with a BIOS/firmware update by your vendor.
 
 These properties might give you further insights, why `CVE-2017-5754 mitigated` is `false`.
 
-## OSMitigationRegKeySet
+## Registry Keys
+### OSMitigationRegKeySet
 As per [Windows Server guidance to protect against speculative execution side-channel vulnerabilities](https://support.microsoft.com/help/4072698
 ):
 
@@ -153,6 +157,7 @@ As per [Windows Server guidance to protect against speculative execution side-ch
 > Enabling these mitigations may affect performance. The actual performance impact will depend on multiple factors, such as the specific chipset in your physical host and the workloads that are running. Microsoft recommends that customers assess the performance impact for their environment and make necessary adjustments.
 
 `OSMitigationRegKeySet` is `true` if the values for the registry key `Memory Management` are set as required, i.e. `FeatureSettingsOverride` is `0` and `FeatureSettingsOverrideMask` is `3`.
+`OSMitigationRegKeySet` is `empty` if the computer is a client.
 
 To create the required values, you can use the following PowerShell commands:
 ```powershell
@@ -162,7 +167,7 @@ New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\M
 
 *Note: This is not required for Clients.*
 
-## AVCompatibility
+### AVCompatibility
 As per [Important information regarding the Windows security updates released on January 3, 2018 and anti-virus software](https://support.microsoft.com/help/4072699), the security updates are only installed, if the registry value `cadca5fe-87d3-4b96-b7fb-a231484277cc` is present in `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\QualityCompat`. 
 
 The value is either set by the the installed Anti-Virus, or must be set manually if no Anti-Virus is installed.
@@ -173,8 +178,33 @@ New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\QualityC
 ```
 *Note: Only use this command, if you don't have any Anti-Virus installed, or verified that it's compatible!*
 
+### MinVmVersionForCpuBasedMitigations
+If Hyper-V is installed, an additional Registry value has to be taken care of.
+`MinVmVersionForCpuBasedMitigations` is the value of the minimum supported VM version for CVE-2017-5715 fix of VM guests. If Hyper-V is not active, it's `empty`.
+
+From [Protecting guest virtual machines from CVE-2017-5715 (branch target injection)](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/CVE-2017-5715-and-hyper-v-vms)
+> By default, virtual machines with a VM version below 8.0 will not have access to updated firmware capabilities required to mitigate CVE-2017-5715. Because VM version 8.0 is only available starting with Windows Server 2016, users of Windows Server 2012 R2 or earlier must modify a specific registry value on all machines in their cluster.
+
+To give every VM version access to the updated firmware capabilities, you can use the following PowerShell code:
+
+```powershell
+if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization' -ErrorAction SilentlyContinue).MinVmVersionForCpuBasedMitigations) {
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization' -Name MinVmVersionForCpuBasedMitigations -Value '1.0'
+}
+else {
+    New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization' -Name MinVmVersionForCpuBasedMitigations -PropertyType String -Value '1.0'
+}
+```
+
+*Note: A cold reboot of each VM is required. Rebooting the OS from inside the Guest is not sufficient to make the setting effective. You have to Turn the machine off and on again.
+
+This can be considered as the Hyper-V Guest equivalent to "microcode CPU update from hardware OEM".
 
 # History
+### 0.4
+* \+ MinVmVersionForCpuBasedMitigations added
+### 0.3.1
+* \* OSMitigationRegKeySet fix
 ### 0.3
 * \+ CVE properties added
 * \+ CVE-2017-5753 for Edge, IE, Chrome, and Firefox
