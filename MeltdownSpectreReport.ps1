@@ -33,7 +33,7 @@
     KVAShadowWindowsSupportPresent     : True
     KVAShadowWindowsSupportEnabled     : True
     KVAShadowPcidEnabled               : True
-    OSMitigationRegKeySet                : True
+    OSMitigationRegKeySet              : True
     AVCompatibility                    : True
     InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
                                         @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
@@ -52,7 +52,7 @@
     Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 .NOTES
     Author: VRDSE
-    Version: 0.3
+    Version: 0.3.1
 #>
 [CmdletBinding()]
 param(
