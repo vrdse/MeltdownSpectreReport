@@ -887,6 +887,7 @@ $GetMeltdownStatusInformation = {
         $Win32_OperatingSystem = Get-WmiObject -Class Win32_OperatingSystem
         $ComputerManufacturer = $Win32_ComputerSystem.Manufacturer
         $ComputerModel = $Win32_ComputerSystem.Model
+        $ProductType = $Win32_OperatingSystem.ProductType
         $BIOS = (Get-WmiObject -Class Win32_BIOS).Name
         $Processor = (Get-WmiObject -Class Win32_Processor).Name
         $OperatingSystem = $Win32_OperatingSystem.Caption
@@ -960,13 +961,16 @@ $GetMeltdownStatusInformation = {
         Remote Desktop Services Hosts (RDSH)
         For physical hosts or virtual machines that are running untrusted code such as containers or untrusted extensions for database, untrusted web content or workloads that run code that is provided from external sources.
         #>
-        $FeatureSettingsOverride = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverride # must be 0
-        $FeatureSettingsOverrideMask = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverrideMask # must be 3
-        if (($FeatureSettingsOverride -eq 0) -and ($FeatureSettingsOverrideMask -eq 3)) {
-            $OSMitigationRegKeySet = $true
-        }
-        else {
-            $OSMitigationRegKeySet = $false
+        if ($ProductType -ne 1) {
+            # Product Type = Workstation
+            $FeatureSettingsOverride = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverride # must be 0
+            $FeatureSettingsOverrideMask = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -ErrorAction SilentlyContinue).FeatureSettingsOverrideMask # must be 3
+            if (($FeatureSettingsOverride -eq 0) -and ($FeatureSettingsOverrideMask -eq 3)) {
+                $OSMitigationRegKeySet = $true
+            }
+            else {
+                $OSMitigationRegKeySet = $false
+            }
         }
 
         # https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/CVE-2017-5715-and-hyper-v-vms
@@ -1001,6 +1005,7 @@ $GetMeltdownStatusInformation = {
         $output | Add-Member -MemberType NoteProperty -Name BIOS -Value $BIOS
         $output | Add-Member -MemberType NoteProperty -Name CPU -Value $Processor
         $output | Add-Member -MemberType NoteProperty -Name OperatingSystem -Value $OperatingSystem
+        $output | Add-Member -MemberType NoteProperty -Name ProductType -Value $ProductType
         $output | Add-Member -MemberType NoteProperty -Name OSReleaseId -Value $OSReleaseId
         $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $isHyperV
         $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $isTerminalServer
@@ -1011,6 +1016,7 @@ $GetMeltdownStatusInformation = {
         $output | Add-Member -MemberType NoteProperty -Name isFirefox -Value $isFirefox        
         $output | Add-Member -MemberType NoteProperty -Name OSMitigationRegKeySet -Value $OSMitigationRegKeySet
         $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $AVCompatibility
+        $output | Add-Member -MemberType NoteProperty -Name MinVmVersionForCpuBasedMitigations -Value $MinVmVersionForCpuBasedMitigations
         $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $Hotfixes
         $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $Uptime
         $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $ExecutionDate
@@ -1165,6 +1171,7 @@ $GetMeltdownStatusInformation = {
     $output | Add-Member -MemberType NoteProperty -Name KVAShadowPcidEnabled -Value $SpeculationControlSettings.KVAShadowPcidEnabled
     $output | Add-Member -MemberType NoteProperty -Name OSMitigationRegKeySet -Value $SystemInformation.OSMitigationRegKeySet
     $output | Add-Member -MemberType NoteProperty -Name AVCompatibility -Value $SystemInformation.AVCompatibility
+    $output | Add-Member -MemberType NoteProperty -Name MinVmVersionForCpuBasedMitigations -Value $SystemInformation.MinVmVersionForCpuBasedMitigations  
     $output | Add-Member -MemberType NoteProperty -Name InstalledUpdates -Value $SystemInformation.InstalledUpdates
     $output | Add-Member -MemberType NoteProperty -Name Uptime -Value $SystemInformation.Uptime
     $output | Add-Member -MemberType NoteProperty -Name ExecutionDate -Value $SystemInformation.ExecutionDate
