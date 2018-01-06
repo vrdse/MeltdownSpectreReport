@@ -201,6 +201,8 @@ else {
 This can be considered as the Hyper-V Guest equivalent to "microcode CPU update from hardware OEM".
 
 # History
+### 0.4.2
+* \* issue with 'CVE-2017-5753 mitigated in IE' and PSv2 fixed
 ### 0.4.1
 * \* fixing "Firefox.exe located in Program Files (x86) #1"
 ### 0.4
