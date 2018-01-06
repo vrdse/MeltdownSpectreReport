@@ -44,7 +44,7 @@ The script includes [Get-SpeculationControlSettings](https://www.powershellgalle
     KVAShadowWindowsSupportPresent     : True
     KVAShadowWindowsSupportEnabled     : True
     KVAShadowPcidEnabled               : True
-    OSMitigationRegKeySet                : True
+    OSMitigationRegKeySet              : True
     AVCompatibility                    : True
     InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
                                         @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
