@@ -50,8 +50,6 @@
     PS C:\> $ComputerName = Get-Content $env:USERPROFILE\Desktop\servers.txt
     .\MeltdownSpectreReport.ps1 -ComputerName $ComputerName -ErrorAction SilentlyContinue | 
     Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
-
-
 .NOTES
     Author: VRDSE
     Version: 0.3
