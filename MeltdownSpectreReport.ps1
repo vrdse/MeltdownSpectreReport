@@ -1188,7 +1188,7 @@ if ($ComputerName) {
         Invoke-Command -ScriptBlock $GetMeltdownStatusInformation -Session $_
     } -ImportVariable
 
-    $CimSession | Remove-CimSession
+    $CimSession | Remove-CimSession -ErrorAction SilentlyContinue
 }
 else {
     . $GetMeltdownStatusInformation
