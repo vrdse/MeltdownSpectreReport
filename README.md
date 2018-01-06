@@ -37,6 +37,7 @@ The script includes [Get-SpeculationControlSettings](https://www.powershellgalle
     OSReleaseId                    : 1709
     isHyperV                       : True
     isTerminalServer               : False
+    isDocker                       : True
     BTIHardwarePresent             : False
     BTIWindowsSupportPresent       : True
     BTIWindowsSupportEnabled       : False
@@ -68,8 +69,13 @@ The script includes [Get-SpeculationControlSettings](https://www.powershellgalle
 # Properties
 ## isHyperV
 Is `true` if `vmms` Service is running. Hypervisors are at increased risk.
+
 ## isTerminalServer
 Is `true` if `TerminalServerMode` is `1`. Terminal Servers (Remote Desktop Servers) are at increased risk.
+
+## isDocker
+Is `true` if `PATH` system variable contains `docker` (which is the default). Container hoster are at increased risk.
+
 ## BTI
 BTI is *Branch Target Injection* as described in [CVE-2017-5715](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5715) alias [Spectre](https://spectreattack.com/).
 
@@ -119,3 +125,10 @@ Earlier versions do not have a mitigation implemented.
 For Chrome 64 further mitigations are announced. 
 
 `ChromeSitePerProcess` is `true` if `HKEY_LOCAL_MACHINE\Software\Policies\Google\Chrome\SitePerProcess` is `1`. See also [Policy List/SitePerProcess](https://www.chromium.org/administrators/policy-list-3#SitePerProcess).
+
+
+# History
+### 0.3
+* \+ `isDocker` check
+### 0.2
+* \+ PowerShellv2 support

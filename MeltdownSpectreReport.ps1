@@ -920,6 +920,12 @@ $GetMeltdownStatusInformation = {
     }
 
     # Test for Docker
+    if ($env:Path -match 'docker') {
+        $isDocker = $true
+    }
+    else {
+        $isDocker = $false
+    }
 
 
     # CVE-2017-5754 (Meltdown) & CVE-2017-5715 (Spectre)
@@ -995,6 +1001,7 @@ $GetMeltdownStatusInformation = {
     $output | Add-Member -MemberType NoteProperty -Name OSReleaseId -Value $OSReleaseId
     $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $isHyperV
     $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $isTerminalServer
+    $output | Add-Member -MemberType NoteProperty -Name isDocker -Value $isDocker
     $output | Add-Member -MemberType NoteProperty -Name BTIHardwarePresent -Value $SpeculationControlSettings.BTIHardwarePresent
     $output | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportPresent -Value $SpeculationControlSettings.BTIWindowsSupportPresent
     $output | Add-Member -MemberType NoteProperty -Name BTIWindowsSupportEnabled -Value $SpeculationControlSettings.BTIWindowsSupportEnabled
