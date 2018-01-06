@@ -80,7 +80,7 @@ BTI is *Branch Target Injection* as described in [CVE-2017-5715](https://cve.mit
 `BTIWindowsSupportEnabled` is `true` the Branch Target Injection mitigation is effective.
 
 ## KVA
-KVA checks OS mitigation against [CVE-2017-5754](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754) alias [Meltdown](https://meltdownattack.com/).
+KVA or Kernel VA (also known as KPTI (Kernel page-table isolation) or KAISER) removes the mapping of kernel memory in user space process and thus mitigates the practical explotation of [CVE-2017-5754](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754) alias [Meltdown](https://meltdownattack.com/).
 
 ## OSMitigationEnabled
 As per [Windows Server guidance to protect against speculative execution side-channel vulnerabilities](https://support.microsoft.com/help/4072698
