@@ -741,7 +741,7 @@ $GetMeltdownStatusInformation = {
                 $kvaShadowEnabled = $false
                 $kvaShadowPcidEnabled = $false
 
-                $cpu = Get-WmiObject -Class Win32_Processor  Select-Object -First 1 #Fix for the case of multiple objects returned
+                $cpu = Get-WmiObject -Class Win32_Processor | Select-Object -First 1 #Fix for the case of multiple objects returned
 
                 if ($cpu.Manufacturer -eq "AuthenticAMD") {
                     $kvaShadowRequired = $false
