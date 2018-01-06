@@ -44,7 +44,7 @@ The script includes [Get-SpeculationControlSettings](https://www.powershellgalle
     KVAShadowWindowsSupportPresent     : True
     KVAShadowWindowsSupportEnabled     : True
     KVAShadowPcidEnabled               : True
-    OSMitigationEnabled                : True
+    OSMitigationRegKeySet                : True
     AVCompatibility                    : True
     InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
                                         @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
@@ -75,7 +75,7 @@ This highly relies on the information from [Spectre still unfixed, unlike what I
 Is `true` if CVE-2017-5754 mitigated if `KVAShadowRequired` is `false`, or if `KVAShadowWindowsSupportPresent`, `KVAShadowWindowsSupportEnabled`, and `KVAShadowPcidEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)].
 
 ### CVE-2017-5715 mitigated (aka Spectre Variant 2)
-Is `true` if `BTIHardwarePresent`, `BTIWindowsSupportPresent`, `BTIWindowsSupportEnabled`, and `OSMitigationEnabled` are `true`.
+Is `true` if `BTIHardwarePresent`, `BTIWindowsSupportPresent`, `BTIWindowsSupportEnabled`, and `OSMitigationRegKeySet` are `true`.
 
 ### CVE-2017-5753 mitigated in Edge (aka Spectre Variant 1)
 Is `true` if one of the following Windows Updates is installed:
@@ -142,7 +142,7 @@ KVA or Kernel VA (also known as KPTI (Kernel page-table isolation) or KAISER) re
 
 These properties might give you further insights, why `CVE-2017-5754 mitigated` is `false`.
 
-## OSMitigationEnabled
+## OSMitigationRegKeySet
 As per [Windows Server guidance to protect against speculative execution side-channel vulnerabilities](https://support.microsoft.com/help/4072698
 ):
 
@@ -150,13 +150,15 @@ As per [Windows Server guidance to protect against speculative execution side-ch
 > 
 > Enabling these mitigations may affect performance. The actual performance impact will depend on multiple factors, such as the specific chipset in your physical host and the workloads that are running. Microsoft recommends that customers assess the performance impact for their environment and make necessary adjustments.
 
-`OSMitigationEnabled` is `true` if the values for the registry key `Memory Management` are set as required, i.e. `FeatureSettingsOverride` is `0` and `FeatureSettingsOverrideMask` is `3`.
+`OSMitigationRegKeySet` is `true` if the values for the registry key `Memory Management` are set as required, i.e. `FeatureSettingsOverride` is `0` and `FeatureSettingsOverrideMask` is `3`.
 
 To create the required values, you can use the following PowerShell commands:
 ```powershell
 New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -PropertyType 'DWORD' -Value '0'  -Name 'FeatureSettingsOverride'
 New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -PropertyType 'DWORD' -Value '3'  -Name 'FeatureSettingsOverrideMask'
 ```
+
+*Note: This is not required for Clients.*
 
 ## AVCompatibility
 As per [Important information regarding the Windows security updates released on January 3, 2018 and anti-virus software](https://support.microsoft.com/help/4072699), the security updates are only installed, if the registry value `cadca5fe-87d3-4b96-b7fb-a231484277cc` is present in `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\QualityCompat`. 
