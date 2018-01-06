@@ -75,13 +75,13 @@ This highly relies on the information from [Spectre still unfixed, unlike what I
 Is `true` if CVE-2017-5754 mitigated if `KVAShadowRequired` is `false`, or if `KVAShadowWindowsSupportPresent`, `KVAShadowWindowsSupportEnabled`, and `KVAShadowPcidEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)].
 
 ### CVE-2017-5715 mitigated (aka Spectre Variant 2)
-Is `true` if `BTIHardwarePresent`, `BTIWindowsSupportPresent`, `BTIWindowsSupportEnabled`, and `OSMitigationRegKeySet` are `true`.
+Is `true` if `BTIHardwarePresent`, `BTIWindowsSupportPresent`, and `BTIWindowsSupportEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)]
 
 ### CVE-2017-5753 mitigated in Edge (aka Spectre Variant 1)
 Is `true` if one of the following Windows Updates is installed:
 'KB4056893', 'KB4056890', 'KB4056891', 'KB4056892', 'KB4056888'
 
-The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002)
+The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002).
 
 Is `empty` if Edge was not found.
 
@@ -89,7 +89,7 @@ Is `empty` if Edge was not found.
 Is `true` if one of the following Windows Updates is installed:
 'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892'
 
-The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002)
+The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002).
 
 Also see [Mitigating speculative execution side-channel attacks in Microsoft Edge and Internet Explorer](https://blogs.windows.com/msedgedev/2018/01/03/speculative-execution-mitigations-microsoft-edge-internet-explorer/) for details.
 
@@ -139,6 +139,8 @@ These properties might give you further insights, why `CVE-2017-5715 mitigated` 
 
 ## KVA*
 KVA or Kernel VA (also known as KPTI (Kernel page-table isolation) or KAISER) removes the mapping of kernel memory in user space process and thus mitigates the practical explotation of [CVE-2017-5754](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754) alias [Meltdown](https://meltdownattack.com/).
+
+`KVAShadowPcidEnabled`, too, needs the microcode CPU update that comes with a BIOS/firmware update by your vendor.
 
 These properties might give you further insights, why `CVE-2017-5754 mitigated` is `false`.
 
