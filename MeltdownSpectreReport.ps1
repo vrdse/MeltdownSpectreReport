@@ -662,8 +662,8 @@ $GetMeltdownStatusInformation = {
                 # Query branch target injection information.
                 #
 
-                Write-Host "Speculation control settings for CVE-2017-5715 [branch target injection]" -ForegroundColor Cyan
-                Write-Host
+                #Write-Host "Speculation control settings for CVE-2017-5715 [branch target injection]" -ForegroundColor Cyan
+                #Write-Host
 
                 $btiHardwarePresent = $false
                 $btiWindowsSupportPresent = $false
@@ -705,24 +705,24 @@ $GetMeltdownStatusInformation = {
                     }
 
                     if ($PSBoundParameters['Verbose']) {
-                        Write-Host "BpbEnabled :" (($flags -band $scfBpbEnabled) -ne 0)
-                        Write-Host "BpbDisabledSystemPolicy :" (($flags -band $scfBpbDisabledSystemPolicy) -ne 0)
-                        Write-Host "BpbDisabledNoHardwareSupport :" (($flags -band $scfBpbDisabledNoHardwareSupport) -ne 0)
-                        Write-Host "HwReg1Enumerated :" (($flags -band $scfHwReg1Enumerated) -ne 0)
-                        Write-Host "HwReg2Enumerated :" (($flags -band $scfHwReg2Enumerated) -ne 0)
-                        Write-Host "HwMode1Present :" (($flags -band $scfHwMode1Present) -ne 0)
-                        Write-Host "HwMode2Present :" (($flags -band $scfHwMode2Present) -ne 0)
-                        Write-Host "SmepPresent :" (($flags -band $scfSmepPresent) -ne 0)
+                        #Write-Host "BpbEnabled :" (($flags -band $scfBpbEnabled) -ne 0)
+                        #Write-Host "BpbDisabledSystemPolicy :" (($flags -band $scfBpbDisabledSystemPolicy) -ne 0)
+                        #Write-Host "BpbDisabledNoHardwareSupport :" (($flags -band $scfBpbDisabledNoHardwareSupport) -ne 0)
+                        #Write-Host "HwReg1Enumerated :" (($flags -band $scfHwReg1Enumerated) -ne 0)
+                        #Write-Host "HwReg2Enumerated :" (($flags -band $scfHwReg2Enumerated) -ne 0)
+                        #Write-Host "HwMode1Present :" (($flags -band $scfHwMode1Present) -ne 0)
+                        #Write-Host "HwMode2Present :" (($flags -band $scfHwMode2Present) -ne 0)
+                        #Write-Host "SmepPresent :" (($flags -band $scfSmepPresent) -ne 0)
                     }
                 }
 
-                Write-Host "Hardware support for branch target injection mitigation is present:"($btiHardwarePresent) -ForegroundColor $(If ($btiHardwarePresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-                Write-Host "Windows OS support for branch target injection mitigation is present:"($btiWindowsSupportPresent) -ForegroundColor $(If ($btiWindowsSupportPresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-                Write-Host "Windows OS support for branch target injection mitigation is enabled:"($btiWindowsSupportEnabled) -ForegroundColor $(If ($btiWindowsSupportEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
+                #Write-Host "Hardware support for branch target injection mitigation is present:"($btiHardwarePresent) -ForegroundColor $(If ($btiHardwarePresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
+                #Write-Host "Windows OS support for branch target injection mitigation is present:"($btiWindowsSupportPresent) -ForegroundColor $(If ($btiWindowsSupportPresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
+                #Write-Host "Windows OS support for branch target injection mitigation is enabled:"($btiWindowsSupportEnabled) -ForegroundColor $(If ($btiWindowsSupportEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
   
                 if ($btiWindowsSupportPresent -eq $true -and $btiWindowsSupportEnabled -eq $false) {
-                    Write-Host -ForegroundColor Red "Windows OS support for branch target injection mitigation is disabled by system policy:"($btiDisabledBySystemPolicy)
-                    Write-Host -ForegroundColor Red "Windows OS support for branch target injection mitigation is disabled by absence of hardware support:"($btiDisabledByNoHardwareSupport)
+                    #Write-Host -ForegroundColor Red "Windows OS support for branch target injection mitigation is disabled by system policy:"($btiDisabledBySystemPolicy)
+                    #Write-Host -ForegroundColor Red "Windows OS support for branch target injection mitigation is disabled by absence of hardware support:"($btiDisabledByNoHardwareSupport)
                 }
         
                 $object | Add-Member -MemberType NoteProperty -Name BTIHardwarePresent -Value $btiHardwarePresent
@@ -735,9 +735,9 @@ $GetMeltdownStatusInformation = {
                 # Query kernel VA shadow information.
                 #
 
-                Write-Host
-                Write-Host "Speculation control settings for CVE-2017-5754 [rogue data cache load]" -ForegroundColor Cyan
-                Write-Host    
+                #Write-Host
+                #Write-Host "Speculation control settings for CVE-2017-5754 [rogue data cache load]" -ForegroundColor Cyan
+                #Write-Host    
 
                 $kvaShadowRequired = $true
                 $kvaShadowPresent = $false
@@ -797,22 +797,22 @@ $GetMeltdownStatusInformation = {
                     $kvaShadowPcidEnabled = ((($flags -band $kvaShadowPcidFlag) -ne 0) -and (($flags -band $kvaShadowInvpcidFlag) -ne 0))
 
                     if ($PSBoundParameters['Verbose']) {
-                        Write-Host "KvaShadowEnabled :" (($flags -band $kvaShadowEnabledFlag) -ne 0)
-                        Write-Host "KvaShadowUserGlobal :" (($flags -band $kvaShadowUserGlobalFlag) -ne 0)
-                        Write-Host "KvaShadowPcid :" (($flags -band $kvaShadowPcidFlag) -ne 0)
-                        Write-Host "KvaShadowInvpcid :" (($flags -band $kvaShadowInvpcidFlag) -ne 0)
+                        #Write-Host "KvaShadowEnabled :" (($flags -band $kvaShadowEnabledFlag) -ne 0)
+                        #Write-Host "KvaShadowUserGlobal :" (($flags -band $kvaShadowUserGlobalFlag) -ne 0)
+                        #Write-Host "KvaShadowPcid :" (($flags -band $kvaShadowPcidFlag) -ne 0)
+                        #Write-Host "KvaShadowInvpcid :" (($flags -band $kvaShadowInvpcidFlag) -ne 0)
                     }
                 }
         
-                Write-Host "Hardware requires kernel VA shadowing:"$kvaShadowRequired
+                #Write-Host "Hardware requires kernel VA shadowing:"$kvaShadowRequired
 
                 if ($kvaShadowRequired) {
 
-                    Write-Host "Windows OS support for kernel VA shadow is present:"$kvaShadowPresent -ForegroundColor $(If ($kvaShadowPresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
-                    Write-Host "Windows OS support for kernel VA shadow is enabled:"$kvaShadowEnabled -ForegroundColor $(If ($kvaShadowEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
+                    #Write-Host "Windows OS support for kernel VA shadow is present:"$kvaShadowPresent -ForegroundColor $(If ($kvaShadowPresent) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
+                    #Write-Host "Windows OS support for kernel VA shadow is enabled:"$kvaShadowEnabled -ForegroundColor $(If ($kvaShadowEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Red })
 
                     if ($kvaShadowEnabled) {
-                        Write-Host "Windows OS support for PCID performance optimization is enabled: $kvaShadowPcidEnabled [not required for security]" -ForegroundColor $(If ($kvaShadowPcidEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Blue })
+                        #Write-Host "Windows OS support for PCID performance optimization is enabled: $kvaShadowPcidEnabled [not required for security]" -ForegroundColor $(If ($kvaShadowPcidEnabled) { [System.ConsoleColor]::Green } Else { [System.ConsoleColor]::Blue })
                     }
                 }
 
@@ -859,12 +859,12 @@ $GetMeltdownStatusInformation = {
 
                 if ($actions.Length -gt 0) {
 
-                    Write-Host
-                    Write-Host "Suggested actions" -ForegroundColor Cyan
-                    Write-Host 
+                    #Write-Host
+                    #Write-Host "Suggested actions" -ForegroundColor Cyan
+                    #Write-Host 
 
                     foreach ($action in $actions) {
-                        Write-Host " *" $action
+                        #Write-Host " *" $action
                     }
                 }
 
