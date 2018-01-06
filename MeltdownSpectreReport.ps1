@@ -1131,10 +1131,10 @@ $GetMeltdownStatusInformation = {
     $output | Add-Member -MemberType NoteProperty -Name isHyperV -Value $SystemInformation.isHyperV
     $output | Add-Member -MemberType NoteProperty -Name isTerminalServer -Value $SystemInformation.isTerminalServer
     $output | Add-Member -MemberType NoteProperty -Name isDocker -Value $SystemInformation.isDocker
-    $output | Add-Member -MemberType NoteProperty -Name isIE -Value $SystemInformation.isIE
-    $output | Add-Member -MemberType NoteProperty -Name isEdge -Value $SystemInformation.isEdge
-    $output | Add-Member -MemberType NoteProperty -Name isChrome -Value $SystemInformation.isChrome
-    $output | Add-Member -MemberType NoteProperty -Name isFirefox -Value $SystemInformation.isFirefox
+    #$output | Add-Member -MemberType NoteProperty -Name isIE -Value $SystemInformation.isIE
+    #$output | Add-Member -MemberType NoteProperty -Name isEdge -Value $SystemInformation.isEdge
+    #$output | Add-Member -MemberType NoteProperty -Name isChrome -Value $SystemInformation.isChrome
+    #$output | Add-Member -MemberType NoteProperty -Name isFirefox -Value $SystemInformation.isFirefox
     $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5754 mitigated' -Value $CVE20175754mitigated
     $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5715 mitigated' -Value $CVE20175715mitigated
     $output | Add-Member -MemberType NoteProperty -Name 'CVE-2017-5753 mitigated in Edge' -Value $CVE20175753mitigated.EdgeMitigated
