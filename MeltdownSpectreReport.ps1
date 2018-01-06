@@ -1104,16 +1104,16 @@ $GetMeltdownStatusInformation = {
         if ($SystemInformation.isEdge) {
             #KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
             $EdgeUpdates = 'KB4056893', 'KB4056890', 'KB4056891', 'KB4056892', 'KB4056888'
-            $Installed = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
-            $EdgeMitigated = IsHotfixInstalled $EdgeUpdates $Installed
+            $Hotfixes = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
+            $EdgeMitigated = IsHotfixInstalled $EdgeUpdates $Hotfixes
         } 
 
         # Internet Explorer 
         if ($SystemInformation.isIE) {
             # KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
             $IEUpdates = 'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892'
-            $Installed = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
-            $IEMitigated = IsHotfixInstalled $IEUpdates $Installed
+            $Hotfixes = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
+            $IEMitigated = IsHotfixInstalled $IEUpdates $Hotfixes
         } 
 
         # Firefox
