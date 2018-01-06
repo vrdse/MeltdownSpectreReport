@@ -7,47 +7,49 @@
     broader picture. Also it uses Invoke-Parallel (RamblingCookieMonster) and Invoke-Command to obtain the 
     information from remote computers with speed.
 .EXAMPLE
-    PS C:\> MeltdownSpectreReport.ps1 -ComputerName computer01
-    ComputerName                   : Computer01
-    Manufacturer                   : HP
-    Model                          : HP Spectre x360 Convertible
-    BIOS                           : F.47
-    CPU                            : Intel(R) Core(TM) i7-6560U CPU @ 2.20GHz
-    OperatingSystem                : Microsoft Windows 10 Pro
-    OSReleaseId                    : 1709
-    isHyperV                       : True
-    isTerminalServer               : False
-    BTIHardwarePresent             : False
-    BTIWindowsSupportPresent       : True
-    BTIWindowsSupportEnabled       : False
-    BTIDisabledBySystemPolicy      : False
-    BTIDisabledByNoHardwareSupport : True
-    KVAShadowRequired              : True
-    KVAShadowWindowsSupportPresent : True
-    KVAShadowWindowsSupportEnabled : True
-    KVAShadowPcidEnabled           : True
-    OSMitigationEnabled            : True
-    AVCompatibility                : True
-    ChromeVersion                  : 63.0.3239.132
-    ChromeSitePerProcess           : False
-    InstalledUpdates               : {@{HotFixId=KB4048951; Description=Security
-                                    Update; InstalledOn=15.11.2017 00:00:00;
-                                    ComputerName=Computer01}, @{HotFixId=KB4049179;
-                                    Description=Security Update;
-                                    InstalledOn=05.11.2017 00:00:00;
-                                    ComputerName=Computer01}, @{HotFixId=KB4051613;
-                                    Description=Update; InstalledOn=09.11.2017
-                                    00:00:00; ComputerName=Computer01},
-                                    @{HotFixId=KB4053577; Description=Security Update;
-                                    InstalledOn=01.01.2018 00:00:00;
-                                    ComputerName=Computer01}...}
-    LastReboot                     : 05.01.2018 11:28:31
-    ExecutionDate                  : 05.01.2018 17:05
+    PS C:\> .\MeltdownSpectreReport.ps1 -ComputerName computer01
+    ComputerName                       : computer01
+    Manufacturer                       : HP
+    Model                              : HP Spectre x360 Convertible
+    BIOS                               : F.47
+    CPU                                : Intel(R) Core(TM) i7-6560U CPU @ 2.20GHz
+    OperatingSystem                    : Microsoft Windows 10 Pro
+    OSReleaseId                        : 1709
+    isHyperV                           : True
+    isTerminalServer                   : False
+    isDocker                           : True
+    CVE-2017-5754 mitigated            : True
+    CVE-2017-5715 mitigated            : False
+    CVE-2017-5753 mitigated in Edge    : True
+    CVE-2017-5753 mitigated in IE      : True
+    CVE-2017-5753 mitigated in Chrome  : False
+    CVE-2017-5753 mitigated in Firefox : True
+    BTIHardwarePresent                 : False
+    BTIWindowsSupportPresent           : True
+    BTIWindowsSupportEnabled           : False
+    BTIDisabledBySystemPolicy          : False
+    BTIDisabledByNoHardwareSupport     : True
+    KVAShadowRequired                  : True
+    KVAShadowWindowsSupportPresent     : True
+    KVAShadowWindowsSupportEnabled     : True
+    KVAShadowPcidEnabled               : True
+    OSMitigationEnabled                : True
+    AVCompatibility                    : True
+    InstalledUpdates                   : {@{HotFixId=KB4048951; Description=Security Update; InstalledOn=15.11.2017 00:00:00; ComputerName=computer01},
+                                        @{HotFixId=KB4049179; Description=Security Update; InstalledOn=05.11.2017 00:00:00; ComputerName=computer01},
+                                        @{HotFixId=KB4051613; Description=Update; InstalledOn=09.11.2017 00:00:00; ComputerName=computer01}, @{HotFixId=KB4053577;
+                                        Description=Security Update; InstalledOn=01.01.2018 00:00:00; ComputerName=computer01}...}
+    Uptime                             : 15:01:18.3875647
+    ExecutionDate                      : 06.01.2018
 .EXAMPLE
     PS C:\> $ComputerName = Get-ADComputer -Filter * | Select-Object -ExpandProperty Name
-    $Report = MeltdownSpectreReport.ps1 -ComputerName $ComputerName
+    $Report = .\MeltdownSpectreReport.ps1 -ComputerName $ComputerName
     $Report | ConvertTo-Csv -NoTypeInformation -Delimiter ',' | Out-File C:\report.csv
     $Report | Out-GridView
+.EXAMPLE
+    PS C:\> $ComputerName = Get-Content $env:USERPROFILE\Desktop\servers.txt
+    .\MeltdownSpectreReport.ps1 -ComputerName $ComputerName | 
+    Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 
 
 .NOTES
