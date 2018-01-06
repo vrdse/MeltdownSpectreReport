@@ -52,7 +52,7 @@
     Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 .NOTES
     Author: VRDSE
-    Version: 0.3.1
+    Version: 0.4
 #>
 [CmdletBinding()]
 param(
@@ -880,7 +880,8 @@ $GetMeltdownStatusInformation = {
                 }
             }    
         }
-    }    function Get-SystemInformation {
+    }    
+    function Get-SystemInformation {
         $ComputerName = $env:COMPUTERNAME
         $Win32_ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
         $Win32_OperatingSystem = Get-WmiObject -Class Win32_OperatingSystem
@@ -968,6 +969,18 @@ $GetMeltdownStatusInformation = {
             $OSMitigationRegKeySet = $false
         }
 
+        # https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/CVE-2017-5715-and-hyper-v-vms
+        if ($isHyperV) {
+            $MinVmVersionForCpuBasedMitigations = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization' -ErrorAction SilentlyContinue).MinVmVersionForCpuBasedMitigations
+            if (-not $MinVmVersionForCpuBasedMitigations) {
+                if ($OSReleaseId) {
+                    $MinVmVersionForCpuBasedMitigations = '8.0'
+                }
+                else {
+                    $MinVmVersionForCpuBasedMitigations = $false
+                }
+            }
+        }
 
         <#
         Customers without Anti-Virus
