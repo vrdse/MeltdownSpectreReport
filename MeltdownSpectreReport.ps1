@@ -943,7 +943,7 @@ $GetMeltdownStatusInformation = {
         }
 
         # Test for IE
-        $isIE = Test-Path -Path 'C:\Program Files (x86)\Internet Explorer\iexplore.exe'
+        $isIE = Test-Path -Path 'C:\Program Files\Internet Explorer\iexplore.exe'
 
         # Test for Firefox
         $isFirefox = Test-Path 'C:\Program Files\Mozilla Firefox\firefox.exe'
