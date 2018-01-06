@@ -759,10 +759,10 @@ $GetMeltdownStatusInformation = {
         )
 
         if ($actions.Length -gt 0) {
-            Write-Verbose "Suggested actions" -Verbose
+            Write-Verbose "Suggested actions" #-Verbose
 
             foreach ($action in $actions) {
-                Write-Verbose " * $action" -Verbose
+                Write-Verbose " * $action" #-Verbose
             }
         }
     }
@@ -1136,7 +1136,7 @@ $GetMeltdownStatusInformation = {
     }    
 
     $SystemInformation = Get-SystemInformation
-    $SpeculationControlSettings = Test-SpeculationControlSettings -ErrorAction Continue -Verbose:$false
+    $SpeculationControlSettings = Test-SpeculationControlSettings -ErrorAction Continue
     $CVE20175754mitigated = Get-CVE-2017-5754 $SpeculationControlSettings $SystemInformation
     $CVE20175715mitigated = Get-CVE-2017-5715 $SpeculationControlSettings $SystemInformation
     $CVE20175753mitigated = Get-CVE-2017-5753 $SystemInformation
