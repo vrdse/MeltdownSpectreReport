@@ -68,7 +68,7 @@ Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 ## Mitigation Status
 This highly relies on the information from [Spectre still unfixed, unlike what Intel says](https://gist.github.com/woachk/2f86755260f2fee1baf71c90cd6533e9) and [CPU security bugs caused by speculative execution](https://github.com/marcan/speculation-bugs/blob/master/README.md). I highly recommend to read them.
 
-*Note: Not every mitigation, especially for CVE-2017-5753 is of the same quality. As the root cause relies in the CPU, all these mitigations are not really a **fix** to the actual problem. Mitigation means, it's "more difficult to exploit", and not every mitigation makes it equally difficult. ;)*
+*Note: Not every mitigation, especially for CVE-2017-5753, is of the same quality. As the root cause relies in the CPU, all these mitigations are not really a **fix** to the actual problem. Mitigation means, it's "more difficult to exploit", and not every mitigation makes it equally difficult. The report only knows `true` or `false` for the mitigation. `true` is usually considered as "as good mitigated as currently possible"*
 
 ### CVE-2017-5754 mitigated (aka Meltdown)
 Is `true` if CVE-2017-5754 mitigated if `KVAShadowRequired` is `false`, or if `KVAShadowWindowsSupportPresent`, `KVAShadowWindowsSupportEnabled`, and `KVAShadowPcidEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)].
@@ -108,7 +108,7 @@ See also [Policy List/SitePerProcess](https://www.chromium.org/administrators/po
 Is `empty` if Chrome was not found.
 
 ### CVE-2017-5753 mitigated in Firefox (aka Spectre Variant 1)
-Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` is version >=54.0.7
+Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` or `C:\Program Files (x86)\Mozilla Firefox\firefox.exe` is version >=54.0.7
 
 See [Mitigations landing for new class of timing attack](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) for details.
 
