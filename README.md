@@ -108,7 +108,7 @@ See also [Policy List/SitePerProcess](https://www.chromium.org/administrators/po
 Is `empty` if Chrome was not found.
 
 ### CVE-2017-5753 mitigated in Firefox (aka Spectre Variant 1)
-Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` or `C:\Program Files (x86)\Mozilla Firefox\firefox.exe` is version >=54.0.7
+Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` or `C:\Program Files (x86)\Mozilla Firefox\firefox.exe` is version >=57.0.4
 
 See [Mitigations landing for new class of timing attack](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) for details.
 
