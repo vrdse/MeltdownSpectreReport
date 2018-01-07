@@ -143,7 +143,7 @@ These properties might give you further insights, why `CVE-2017-5715 mitigated` 
 ### KVA*
 KVA or Kernel VA (also known as KPTI (Kernel page-table isolation) or KAISER) removes the mapping of kernel memory in user space process and thus mitigates the practical explotation of [CVE-2017-5754](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754) alias [Meltdown](https://meltdownattack.com/).
 
-`KVAShadowPcidEnabled`, too, needs the microcode CPU update that comes with a BIOS/firmware update by your vendor. PCID however is a optimization, not a requirement for mitigation. 
+`KVAShadowPcidEnabled` is an [optimization](https://twitter.com/epakskape/status/949503467948683264), not a requirement for security. 
 
 These properties might give you further insights, why `CVE-2017-5754 mitigated` is `false`.
 

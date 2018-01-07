@@ -53,7 +53,7 @@
     Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 .NOTES
     Author: VRDSE
-    Version: 0.4.2
+    Version: 0.4.3
 #>
 [CmdletBinding()]
 param(
