@@ -1031,8 +1031,7 @@ $GetMeltdownStatusInformation = {
             $mitigated = $true
         }
         elseif (($SpeculationControlSettings.KVAShadowWindowsSupportPresent -eq $true) -and 
-            ($SpeculationControlSettings.KVAShadowWindowsSupportEnabled -eq $true) -and
-            ($SpeculationControlSettings.KVAShadowPcidEnabled -eq $true)) {
+            ($SpeculationControlSettings.KVAShadowWindowsSupportEnabled -eq $true)) {
             $mitigated = $true
         }
         else {

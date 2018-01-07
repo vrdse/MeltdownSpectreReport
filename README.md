@@ -71,7 +71,7 @@ This highly relies on the information from [Spectre still unfixed, unlike what I
 *Note: Not every mitigation, especially for CVE-2017-5753, is of the same quality. As the root cause relies in the CPU, all these mitigations are not really a **fix** to the actual problem. Mitigation means, it's "more difficult to exploit", and not every mitigation makes it equally difficult. The report only knows `true` or `false` for the mitigation. `true` is usually considered as "as good mitigated as currently possible"*
 
 ### CVE-2017-5754 mitigated (aka Meltdown)
-Is `true` if CVE-2017-5754 mitigated if `KVAShadowRequired` is `false`, or if `KVAShadowWindowsSupportPresent`, `KVAShadowWindowsSupportEnabled`, and `KVAShadowPcidEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)].
+Is `true` if CVE-2017-5754 mitigated if `KVAShadowRequired` is `false`, or if both, `KVAShadowWindowsSupportPresent` and `KVAShadowWindowsSupportEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)].
 
 ### CVE-2017-5715 mitigated (aka Spectre Variant 2)
 Is `true` if `BTIHardwarePresent`, `BTIWindowsSupportPresent`, and `BTIWindowsSupportEnabled` are `true`. The test are actually done by [Get-SpeculationControlSettings](https://www.powershellgallery.com/packages/SpeculationControl/1.0.2/Content/SpeculationControl.psm1)]
@@ -143,7 +143,7 @@ These properties might give you further insights, why `CVE-2017-5715 mitigated` 
 ### KVA*
 KVA or Kernel VA (also known as KPTI (Kernel page-table isolation) or KAISER) removes the mapping of kernel memory in user space process and thus mitigates the practical explotation of [CVE-2017-5754](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754) alias [Meltdown](https://meltdownattack.com/).
 
-`KVAShadowPcidEnabled`, too, needs the microcode CPU update that comes with a BIOS/firmware update by your vendor.
+`KVAShadowPcidEnabled`, too, needs the microcode CPU update that comes with a BIOS/firmware update by your vendor. PCID however is a optimization, not a requirement for mitigation. 
 
 These properties might give you further insights, why `CVE-2017-5754 mitigated` is `false`.
 
@@ -201,6 +201,9 @@ else {
 This can be considered as the Hyper-V Guest equivalent to "microcode CPU update from hardware OEM".
 
 # History
+### 0.4.3
+* \* PCID not required anymore for 'CVE-2017-5754 mitigated' to be true
+* \* issue #2 fixed
 ### 0.4.2
 * \* issue with 'CVE-2017-5753 mitigated in IE' and PSv2 fixed
 ### 0.4.1
