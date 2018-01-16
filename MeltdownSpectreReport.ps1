@@ -1118,10 +1118,11 @@ $GetMeltdownStatusInformation = {
         # Firefox
         if ($SystemInformation.isFirefox) {
             # See https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/
+            # Firefox ESR 52.6.x will not release before 1/23/18 and is vulnerable to Spectre attacks at a lower degree than the standard Firefox release
             $Firefox = (Get-Item -Path 'C:\Program Files\Mozilla Firefox\firefox.exe', 
                 'C:\Program Files (x86)\Mozilla Firefox\firefox.exe' -ErrorAction SilentlyContinue)
             $FirefoxVersion = ($Firefox.VersionInfo.ProductVersion | Sort-Object | Select-Object -First 1) -as [version]
-            if ($FirefoxVersion -ge [version]'57.0.4') {
+            if ($FirefoxVersion -ge [version]'57.0.4' -or $FirefoxVersion -ge [version]'52.6.0') {
                 $FirefoxMitigated = $true
             }
             else {
