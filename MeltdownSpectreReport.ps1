@@ -1122,7 +1122,7 @@ $GetMeltdownStatusInformation = {
             $Firefox = (Get-Item -Path 'C:\Program Files\Mozilla Firefox\firefox.exe', 
                 'C:\Program Files (x86)\Mozilla Firefox\firefox.exe' -ErrorAction SilentlyContinue)
             $FirefoxVersion = ($Firefox.VersionInfo.ProductVersion | Sort-Object | Select-Object -First 1) -as [version]
-            if ($FirefoxVersion -ge [version]'57.0.4' -or $FirefoxVersion -ge [version]'52.6.0') {
+            if ($FirefoxVersion -ge [version]'57.0.4' -or ($FirefoxVersion -ge [version]'52.6.0' -and $FirefoxVersion -lt [version]'53.0.0')) {
                 $FirefoxMitigated = $true
             }
             else {

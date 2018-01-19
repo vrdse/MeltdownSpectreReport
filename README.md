@@ -112,13 +112,13 @@ See [Mitigations landing for new class of timing attack](https://blog.mozilla.or
 
 Is `empty` if Firefox was not found.
 
-#### Firefox Mainstream Release:
+#### Firefox Rapid Release:
 Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` or `C:\Program Files (x86)\Mozilla Firefox\firefox.exe` is version >=57.0.4
 
 #### Firefox ESR Release:
-Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` or `C:\Program Files (x86)\Mozilla Firefox\firefox.exe` is version >=52.6.0
+Is `true` if `C:\Program Files\Mozilla Firefox\firefox.exe` or `C:\Program Files (x86)\Mozilla Firefox\firefox.exe` is version >=52.6.0 and < 53.0.0
 
-*Note: Mozilla has not released a fully patched version of Firefox ESR. However, the ESR is less susceptible to Spectre than the Mainstream release. The Spectre vulnerability mitigation is due with the release of ESR 52.6.0 (expected 1/23/18.) See [Mitigations landing for new class of timing attack](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) for details*
+*Note: Mozilla has not released a fully patched version of Firefox ESR. However, the ESR is less susceptible to Spectre than the Rapid release. The Spectre vulnerability mitigation is due with the release of ESR 52.6.0 (expected 1/23/18.) See [Mitigations landing for new class of timing attack](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) for details*
 
 
 ## Roles
