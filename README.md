@@ -86,9 +86,11 @@ Is `empty` if Edge was not found.
 
 ### CVE-2017-5753 mitigated in IE (aka Spectre Variant 1)
 Is `true` if one of the following Windows Updates is installed:
-'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892'
+'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892', 'KB4057401'
 
 The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002).
+
+[KB4057401](https://support.microsoft.com/en-US/help/4057401) added as it includes KB4056895.
 
 Also see [Mitigating speculative execution side-channel attacks in Microsoft Edge and Internet Explorer](https://blogs.windows.com/msedgedev/2018/01/03/speculative-execution-mitigations-microsoft-edge-internet-explorer/) for details.
 
@@ -208,6 +210,8 @@ else {
 This can be considered as the Hyper-V Guest equivalent to "microcode CPU update from hardware OEM".
 
 # History
+### 0.4.4
+* \* Accept KB4057401 as a substitute for KB4056895
 ### 0.4.3.1
 * \* Added support for Firefox ESR
 ### 0.4.3

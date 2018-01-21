@@ -53,7 +53,7 @@
     Export-Csv -Path $env:USERPROFILE\Desktop\servers.txt -NoTypeInformation
 .NOTES
     Author: VRDSE
-    Version: 0.4.3
+    Version: 0.4.4
 #>
 [CmdletBinding()]
 param(
@@ -1110,7 +1110,8 @@ $GetMeltdownStatusInformation = {
         # Internet Explorer 
         if ($SystemInformation.isIE) {
             # KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
-            $IEUpdates = 'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892'
+            # https://support.microsoft.com/en-US/help/4057401 added as it includes KB4056895
+            $IEUpdates = 'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892', 'KB4057401'
             $Hotfixes = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
             $IEMitigated = IsHotfixInstalled $IEUpdates $Hotfixes
         } 
