@@ -211,9 +211,9 @@ This can be considered as the Hyper-V Guest equivalent to "microcode CPU update 
 
 # History
 ### 0.4.4
-* \* Accept KB4057401 as a substitute for KB4056895
+* \+ Accept KB4057401 as a substitute for KB4056895
 ### 0.4.3.1
-* \* Added support for Firefox ESR
+* \+ Added support for Firefox ESR
 ### 0.4.3
 * \* PCID not required anymore for 'CVE-2017-5754 mitigated' to be true
 * \* issue #2 fixed
