@@ -1102,7 +1102,16 @@ $GetMeltdownStatusInformation = {
         # Edge
         if ($SystemInformation.isEdge) {
             #KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
-            $EdgeUpdates = 'KB4056893', 'KB4056890', 'KB4056891', 'KB4056892', 'KB4056888'
+            $EdgeUpdates = 'KB4056893', 
+            'KB4056890', 
+            'KB4056891', 
+            'KB4056892', 
+            'KB4056888', 
+            'KB4074592',
+            'KB4074588',
+            'KB4074590',
+            'KB4074591'
+
             $Hotfixes = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
             $EdgeMitigated = IsHotfixInstalled $EdgeUpdates $Hotfixes
         } 
@@ -1111,7 +1120,23 @@ $GetMeltdownStatusInformation = {
         if ($SystemInformation.isIE) {
             # KBs from https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002
             # https://support.microsoft.com/en-US/help/4057401 added as it includes KB4056895
-            $IEUpdates = 'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892', 'KB4057401'
+            $IEUpdates = 'KB4056890', 
+            'KB4056895', 
+            'KB4056894', 
+            'KB4056568', 
+            'KB4056893', 
+            'KB4056891', 
+            'KB4056892', 
+            'KB4057401', 
+            'KB4074598',
+            'KB4074591',
+            'KB4074594',
+            'KB4074736',
+            'KB4074590',
+            'KB4074596',
+            'KB4074592',
+            'KB4074588'
+
             $Hotfixes = $SystemInformation.InstalledUpdates | Select-Object -ExpandProperty HotFixId
             $IEMitigated = IsHotfixInstalled $IEUpdates $Hotfixes
         } 
