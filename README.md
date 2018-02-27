@@ -78,7 +78,7 @@ Is `true` if `BTIHardwarePresent`, `BTIWindowsSupportPresent`, and `BTIWindowsSu
 
 ### CVE-2017-5753 mitigated in Edge (aka Spectre Variant 1)
 Is `true` if one of the following Windows Updates is installed:
-'KB4056893', 'KB4056890', 'KB4056891', 'KB4056892', 'KB4056888'
+'KB4056893', 'KB4056890', 'KB4056891', 'KB4056892', 'KB4056888', 'KB4074592' 'KB4074588' 'KB4074590' 'KB4074591'
 
 The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002).
 
@@ -86,7 +86,7 @@ Is `empty` if Edge was not found.
 
 ### CVE-2017-5753 mitigated in IE (aka Spectre Variant 1)
 Is `true` if one of the following Windows Updates is installed:
-'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892', 'KB4057401'
+'KB4056890', 'KB4056895', 'KB4056894', 'KB4056568', 'KB4056893', 'KB4056891', 'KB4056892', 'KB4057401', 'KB4074598','KB4074591','KB4074594','KB4074736','KB4074590','KB4074596','KB4074592','KB4074588'
 
 The list of updates was obtained from [ADV180002 | Guidance to mitigate speculative execution side-channel vulnerabilities](https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/ADV180002).
 
@@ -210,6 +210,8 @@ else {
 This can be considered as the Hyper-V Guest equivalent to "microcode CPU update from hardware OEM".
 
 # History
+### 0.4.5
+* \* KBs for IE11 and Edge updated as per Februrary 2018 patch day
 ### 0.4.4
 * \+ Accept KB4057401 as a substitute for KB4056895
 ### 0.4.3.1
