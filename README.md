@@ -1,3 +1,9 @@
+
+
+*Note: This project is currently not maintained. Mitigation status for CVE-2017-5753 in IE or Edge is not properly displayed, if you installed the recent Windows updates. MeltdownSpectreReport lacks also of report of newer speculative execution vulnerabilities like L1TF. Microsoft updated their [SpeculationControl](https://www.powershellgallery.com/packages/SpeculationControl) module, which I recommend to use. *
+
+
+
 # MeltdownSpectreReport
 Query mitigation status of Meltdown and Spectre against one or multiple Windows computers. It uses parallelization for fast data collection.
 
